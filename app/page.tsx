@@ -5,19 +5,19 @@ const exampleCards = [
     badge: 'Easiest to Make',
     title: 'Moon Thread Necklace',
     desc: 'Simple layered piece using chain scraps and 2 focal charms.',
-    src: 'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?auto=format&fit=crop&w=1200&q=80',
+    src: '/examples/design-1.jpg',
   },
   {
     badge: 'Studio Choice',
     title: 'Golden Drift Bracelet',
     desc: 'Boho stack-friendly bracelet made from mixed beads and jump rings.',
-    src: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?auto=format&fit=crop&w=1200&q=80',
+    src: '/examples/design-2.jpg',
   },
   {
     badge: 'Zero Waste',
     title: 'Charm Cascade Earrings',
     desc: 'Uses leftover findings to create an asymmetric but balanced pair.',
-    src: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1200&q=80',
+    src: '/examples/design-3.jpg',
   },
 ]
 
