@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Knot & Found — Turn your materials into finished jewelry',
+  title: 'Charmchemy — Made from maybe. Designed by AI. Crafted by you.',
   description:
-    'Upload photos of your beads, chains, and findings. Get AI-designed jewelry directions with material lists and making steps.',
+    'AI-generated DIY jewelry design ideas from your existing beads, charms, chains, and findings.',
 }
 
 export default function RootLayout({
