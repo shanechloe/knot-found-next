@@ -29,7 +29,7 @@ export default function HomePage() {
         <div className="nav-links">
           <a href="#how-it-works">How It Works</a>
           <a href="#gallery">Gallery</a>
-          <a href="#start" className="start-btn">Start Creating</a>
+          <a href="/start" className="start-btn">Start Creating</a>
         </div>
       </nav>
 
@@ -44,7 +44,7 @@ export default function HomePage() {
             actually make.
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a className="cta" href="#how-it-works">Start Creating</a>
+            <a className="cta" href="/start">Start Creating</a>
             <a className="lang-btn" href="#gallery">View Examples</a>
           </div>
         </section>
@@ -128,7 +128,7 @@ export default function HomePage() {
         <section className="steps-panel" style={{ gridTemplateColumns: '1fr', textAlign: 'center' }}>
           <div>
             <h2>Ready to make something from maybe?</h2>
-            <a href="#start">Start Creating</a>
+            <a href="/start">Start Creating</a>
           </div>
         </section>
       </main>
