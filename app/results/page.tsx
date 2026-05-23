@@ -1,12 +1,12 @@
 import Image from 'next/image'
 
 type ResultsProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     materials?: string
     style?: string
     type?: string
     purpose?: string
-  }
+  }>
 }
 
 const cardImages = [
@@ -20,11 +20,12 @@ function normalize(value: string | undefined, fallback: string) {
   return value.trim()
 }
 
-export default function ResultsPage({ searchParams }: ResultsProps) {
-  const materials = normalize(searchParams?.materials, 'mixed beads and chain offcuts')
-  const style = normalize(searchParams?.style, 'Boho')
-  const selectedType = normalize(searchParams?.type, 'Necklace')
-  const purpose = normalize(searchParams?.purpose, 'Everyday wear')
+export default async function ResultsPage({ searchParams }: ResultsProps) {
+  const params = await searchParams
+  const materials = normalize(params?.materials, 'mixed beads and chain offcuts')
+  const style = normalize(params?.style, 'Boho')
+  const selectedType = normalize(params?.type, 'Necklace')
+  const purpose = normalize(params?.purpose, 'Everyday wear')
   const type = selectedType === 'Surprise Me' ? 'Jewelry Piece' : selectedType
 
   const ideas = [
