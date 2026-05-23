@@ -318,10 +318,107 @@ footer p {
   font-size: 1.15rem;
 }
 
+.workflow-steps {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.workflow-step {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  padding: 0.8rem;
+  background: color-mix(in srgb, var(--bg) 88%, white);
+}
+
+.workflow-step span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--panel-text);
+  font-weight: 700;
+}
+
+.workflow-step h3 {
+  margin: 0 0 0.25rem;
+}
+
+.workflow-step p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .start-help {
   margin: 0 0 0.7rem;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.upload-box {
+  display: grid;
+  gap: 0.2rem;
+  border: 1.5px dashed var(--line);
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  background: color-mix(in srgb, var(--bg) 80%, white);
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}
+
+.upload-title {
+  font-weight: 600;
+}
+
+.upload-subtitle {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+
+.preview-card {
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.preview-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.preview-meta {
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.preview-meta p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .start-input {
@@ -361,4 +458,69 @@ footer p {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.cta-button {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.result-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--bg) 90%, white);
+}
+
+.result-meta {
+  margin: 0.5rem 0 0.7rem;
+  padding-left: 1rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.result-meta li {
+  margin-bottom: 0.2rem;
+}
+
+.result-steps-title {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.result-steps {
+  margin: 0;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.result-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .form-grid,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
 }
