@@ -8,8 +8,45 @@ type PreviewImage = {
   url: string
 }
 
+const KNOWN_MATERIALS = [
+  'beads',
+  'pearl',
+  'pearls',
+  'chain',
+  'chains',
+  'charm',
+  'charms',
+  'hook',
+  'hooks',
+  'wire',
+  'clasp',
+  'findings',
+  'ring',
+  'rings',
+  'stone',
+  'stones',
+  'crystal',
+  'crystals',
+  'gold',
+  'silver',
+]
+
+function toMaterialKeywords(fileName: string) {
+  const normalized = fileName
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[_-]+/g, ' ')
+
+  const words = normalized.split(/\s+/).filter(Boolean)
+  const known = words.filter((word) => KNOWN_MATERIALS.includes(word))
+  const fallback = words.filter((word) => word.length > 2).slice(0, 4)
+  return known.length > 0 ? known : fallback
+}
+
 export default function StartCreatingPage() {
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
+  const [materialsText, setMaterialsText] = useState('')
+  const [autoFillNote, setAutoFillNote] = useState('')
 
   const previewCountText = useMemo(() => {
     if (previewImages.length === 0) return 'No images selected yet.'
@@ -28,6 +65,20 @@ export default function StartCreatingPage() {
     }))
 
     setPreviewImages((current) => [...current, ...nextImages])
+
+    const detected = Array.from(fileList)
+      .flatMap((file) => toMaterialKeywords(file.name))
+      .map((word) => word.trim())
+      .filter(Boolean)
+
+    const uniqueDetected = Array.from(new Set(detected))
+    if (uniqueDetected.length > 0) {
+      setMaterialsText(uniqueDetected.join(', '))
+      setAutoFillNote('Materials auto-filled from image filenames. You can edit or leave blank.')
+    } else {
+      setAutoFillNote('Could not detect material keywords from filenames. You can type manually or leave blank.')
+    }
+
     event.target.value = ''
   }
 
@@ -117,12 +168,16 @@ export default function StartCreatingPage() {
           )}
 
           <h2>Your Materials</h2>
-          <p className="start-help">Paste or type what you currently have.</p>
+          <p className="start-help">
+            Auto-filled from uploaded photos when possible. You can edit this or leave it blank.
+          </p>
+          {autoFillNote && <p className="start-help">{autoFillNote}</p>}
           <textarea
             className="start-input"
             rows={5}
             name="materials"
-            required
+            value={materialsText}
+            onChange={(event) => setMaterialsText(event.target.value)}
             placeholder="Example: pearl beads, gold chain, lobster clasp, 8 jump rings, moon charm"
           />
 
