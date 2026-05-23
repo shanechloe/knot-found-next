@@ -309,7 +309,7 @@ footer p {
 .start-card {
   border: 1px solid var(--line);
   border-radius: 1.25rem;
-  padding: 1.2rem;
+  padding: 1.4rem;
   background: color-mix(in srgb, var(--bg) 85%, white);
 }
 
@@ -370,6 +370,20 @@ footer p {
   margin-bottom: 0.6rem;
 }
 
+.upload-primary {
+  border: 1px solid color-mix(in srgb, var(--panel) 30%, var(--line));
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.1rem;
+  background: color-mix(in srgb, var(--bg) 65%, white);
+}
+
+.upload-box-large {
+  min-height: 180px;
+  place-content: center;
+  text-align: center;
+}
+
 .upload-title {
   font-weight: 600;
 }
@@ -377,6 +391,16 @@ footer p {
 .upload-subtitle {
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.upload-button {
+  margin-top: 0.65rem;
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  background: var(--panel);
+  color: var(--panel-text);
+  font-weight: 600;
 }
 
 .file-input {
@@ -419,6 +443,12 @@ footer p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.start-tip {
+  margin: 0.4rem 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
 }
 
 .start-input {
@@ -466,10 +496,24 @@ footer p {
   gap: 0.8rem;
 }
 
+.form-grid-single {
+  grid-template-columns: 1fr;
+}
+
 .cta-button {
   border: none;
   font: inherit;
   cursor: pointer;
+}
+
+.optional-tag {
+  margin-left: 0.45rem;
+  font-size: 0.76rem;
+  padding: 0.15rem 0.42rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  vertical-align: middle;
 }
 
 .result-grid {

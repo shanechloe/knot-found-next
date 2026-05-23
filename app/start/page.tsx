@@ -47,6 +47,9 @@ export default function StartCreatingPage() {
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
   const [materialsText, setMaterialsText] = useState('')
   const [autoFillNote, setAutoFillNote] = useState('')
+  const [type, setType] = useState('Necklace')
+  const [style, setStyle] = useState('Boho')
+  const [purpose, setPurpose] = useState('Everyday wear')
 
   const previewCountText = useMemo(() => {
     if (previewImages.length === 0) return 'No images selected yet.'
@@ -86,6 +89,15 @@ export default function StartCreatingPage() {
     setPreviewImages((current) => current.filter((img) => img.id !== id))
   }
 
+  const clearAll = () => {
+    setPreviewImages([])
+    setMaterialsText('')
+    setAutoFillNote('')
+    setType('Necklace')
+    setStyle('Boho')
+    setPurpose('Everyday wear')
+  }
+
   return (
     <div className="start-page-shell">
       <nav className="top-nav">
@@ -107,38 +119,16 @@ export default function StartCreatingPage() {
           </p>
         </section>
 
-        <section className="workflow-steps">
-          <article className="workflow-step">
-            <span>1</span>
-            <div>
-              <h3>Upload your materials</h3>
-              <p>Tell us what beads, chains, charms, and findings you already own.</p>
-            </div>
-          </article>
-          <article className="workflow-step">
-            <span>2</span>
-            <div>
-              <h3>Choose your style</h3>
-              <p>Select your vibe and jewelry type so ideas match your taste.</p>
-            </div>
-          </article>
-          <article className="workflow-step">
-            <span>3</span>
-            <div>
-              <h3>Get 3 makeable designs</h3>
-              <p>Receive three directions with practical crafting guidance.</p>
-            </div>
-          </article>
-        </section>
-
         <form className="start-card" action="/results" method="get">
-          <h2>Upload Photos</h2>
+          <section className="upload-primary">
+          <h2>Upload your materials</h2>
           <p className="start-help">
-            Add clear photos of your materials. Multiple images are supported.
+            Add photos of your beads, charms, chains, findings, or leftover supplies.
           </p>
-          <label className="upload-box" htmlFor="material-images">
-            <span className="upload-title">Click to choose images</span>
-            <span className="upload-subtitle">JPG, PNG, WEBP (multiple allowed)</span>
+          <label className="upload-box upload-box-large" htmlFor="material-images">
+            <span className="upload-title">Drag and drop photos here</span>
+            <span className="upload-subtitle">or click the button below to upload</span>
+            <span className="upload-button">Upload photos</span>
           </label>
           <input
             id="material-images"
@@ -166,10 +156,14 @@ export default function StartCreatingPage() {
               ))}
             </div>
           )}
+          <p className="start-tip">Tip: Lay your materials on a plain background for better results.</p>
+          </section>
 
-          <h2>Your Materials</h2>
+          <h2>
+            Describe more details <span className="optional-tag">Optional</span>
+          </h2>
           <p className="start-help">
-            Auto-filled from uploaded photos when possible. You can edit this or leave it blank.
+            Tell us anything helpful, like colors, quantities, materials, or pieces you really want to use.
           </p>
           {autoFillNote && <p className="start-help">{autoFillNote}</p>}
           <textarea
@@ -178,28 +172,14 @@ export default function StartCreatingPage() {
             name="materials"
             value={materialsText}
             onChange={(event) => setMaterialsText(event.target.value)}
-            placeholder="Example: pearl beads, gold chain, lobster clasp, 8 jump rings, moon charm"
+            placeholder="For example: I have 6 pearl beads, some gold wire, and I want something simple for everyday wear."
           />
 
-          <div className="form-grid">
+          <div className="form-grid form-grid-single">
             <div>
-              <h2>Style</h2>
-              <p className="start-help">Pick the design vibe.</p>
-              <select className="start-input" name="style" defaultValue="Boho">
-                <option>Minimal</option>
-                <option>Romantic</option>
-                <option>Vintage</option>
-                <option>Boho</option>
-                <option>Fairycore</option>
-                <option>Elegant</option>
-                <option>Playful</option>
-                <option>Statement</option>
-              </select>
-            </div>
-            <div>
-              <h2>Type</h2>
-              <p className="start-help">Choose one for this idea set.</p>
-              <select className="start-input" name="type" defaultValue="Necklace">
+              <h2>What would you like to make?</h2>
+              <p className="start-help">Not sure? Choose Surprise Me and let Charmchemy decide.</p>
+              <select className="start-input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
                 <option>Necklace</option>
                 <option>Bracelet</option>
                 <option>Earrings</option>
@@ -210,20 +190,39 @@ export default function StartCreatingPage() {
             </div>
           </div>
 
-          <h2>Purpose</h2>
-          <p className="start-help">Tell us what this design is for.</p>
-          <select className="start-input" name="purpose" defaultValue="Everyday wear">
-            <option>Everyday wear</option>
-            <option>Gift</option>
-            <option>Party</option>
-            <option>Wedding</option>
-            <option>Market / Selling</option>
-            <option>Upcycle project</option>
-          </select>
+          <div className="form-grid form-grid-single">
+            <div>
+              <h2>Choose a vibe</h2>
+              <select className="start-input" name="style" value={style} onChange={(e) => setStyle(e.target.value)}>
+                <option>Minimal</option>
+                <option>Romantic</option>
+                <option>Vintage</option>
+                <option>Boho</option>
+                <option>Fairycore</option>
+                <option>Elegant</option>
+                <option>Playful</option>
+                <option>Statement</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid form-grid-single">
+            <div>
+              <h2>What is it for?</h2>
+              <select className="start-input" name="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+                <option>Everyday wear</option>
+                <option>Gift</option>
+                <option>Party</option>
+                <option>Wedding</option>
+                <option>Market / Selling</option>
+                <option>Upcycle project</option>
+              </select>
+            </div>
+          </div>
 
           <div className="action-row">
-            <button className="cta cta-button" type="submit">Generate 3 Designs</button>
-            <a className="lang-btn" href="/">Back to Home</a>
+            <button className="cta cta-button" type="submit">Generate Ideas</button>
+            <button className="lang-btn cta-button" type="button" onClick={clearAll}>Clear All</button>
           </div>
         </form>
       </main>
