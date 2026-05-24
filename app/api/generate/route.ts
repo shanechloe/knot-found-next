@@ -18,6 +18,27 @@ type Idea = {
   steps: string[]
 }
 
+function toDifficulty(value: unknown): Idea['difficulty'] {
+  if (value === 'Easy' || value === 'Medium' || value === 'Advanced') return value
+  return 'Medium'
+}
+
+function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<GenerateBody, 'style' | 'type' | 'materials' | 'purpose'>>): Idea {
+  const maybe = (input && typeof input === 'object') ? (input as Record<string, unknown>) : {}
+  const ideaType = cleanText(maybe.type, defaults.type === 'Surprise Me' ? 'Jewelry Piece' : defaults.type)
+  return {
+    title: cleanText(maybe.title, `AI Design ${index + 1}`),
+    type: ideaType,
+    style: cleanText(maybe.style, defaults.style),
+    difficulty: toDifficulty(maybe.difficulty),
+    time: cleanText(maybe.time, '35 min'),
+    materialsUsed: cleanText(maybe.materialsUsed, defaults.materials),
+    steps: Array.isArray(maybe.steps)
+      ? maybe.steps.map((s) => cleanText(s, '')).filter(Boolean).slice(0, 4)
+      : ['Arrange your selected pieces.', 'Assemble core structure.', 'Add accents and secure joins.', 'Test fit and finalize.'],
+  }
+}
+
 function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' | 'type' | 'purpose'>>): Idea[] {
   const normalizedType = input.type === 'Surprise Me' ? 'Jewelry Piece' : input.type
   return [
@@ -161,9 +182,14 @@ export async function POST(request: Request) {
       choices?: Array<{ message?: { content?: string } }>
     }
     const raw = data.choices?.[0]?.message?.content ?? ''
-    const parsed = tryParseJson(raw) as { ideas?: Idea[] } | null
+    const parsed = tryParseJson(raw) as { ideas?: unknown[] } | unknown[] | null
+    const rawIdeas = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object' && Array.isArray((parsed as { ideas?: unknown[] }).ideas)
+        ? (parsed as { ideas?: unknown[] }).ideas!
+        : []
 
-    if (!parsed?.ideas || !Array.isArray(parsed.ideas) || parsed.ideas.length === 0) {
+    if (rawIdeas.length === 0) {
       return NextResponse.json({
         ideas: fallbackIdeas(normalized),
         source: 'fallback',
@@ -171,7 +197,8 @@ export async function POST(request: Request) {
       })
     }
 
-    return NextResponse.json({ ideas: parsed.ideas.slice(0, 3), source: 'openai' })
+    const ideas = rawIdeas.slice(0, 3).map((idea, idx) => normalizeIdea(idea, idx, normalized))
+    return NextResponse.json({ ideas, source: 'openai' })
   } catch (error) {
     return NextResponse.json({
       ideas: fallbackIdeas(normalized),

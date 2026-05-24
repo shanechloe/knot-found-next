@@ -116,6 +116,9 @@ export default function ResultsPage() {
           <h1>Your jewelry ideas are ready.</h1>
           <p>Here are 3 makeable designs based on your materials.</p>
           <p>
+            Source: <strong>{result.source === 'openai' ? 'OpenAI' : 'Fallback'}</strong>
+          </p>
+          <p>
             Style: <strong>{result.style || 'Boho'}</strong> | Type: <strong>{result.type || 'Necklace'}</strong> | Purpose:{' '}
             <strong>{result.purpose || 'Everyday wear'}</strong>
           </p>
