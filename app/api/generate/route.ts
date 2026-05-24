@@ -110,7 +110,7 @@ export async function POST(request: Request) {
   try {
     const content: Array<Record<string, string>> = [
       {
-        type: 'input_text',
+        type: 'text',
         text:
           `Generate 3 practical DIY jewelry design ideas as strict JSON. ` +
           `Input: materials=${normalized.materials}, style=${normalized.style}, type=${normalized.type}, purpose=${normalized.purpose}. ` +
@@ -121,12 +121,12 @@ export async function POST(request: Request) {
 
     for (const image of images) {
       content.push({
-        type: 'input_image',
+        type: 'image_url',
         image_url: image,
       })
     }
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +134,13 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
-        input: [
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a jewelry design assistant. Return only valid JSON and no markdown.',
+          },
           {
             role: 'user',
             content,
@@ -148,8 +154,11 @@ export async function POST(request: Request) {
       throw new Error(`OpenAI error: ${response.status} ${errorText}`)
     }
 
-    const data = (await response.json()) as { output_text?: string }
-    const parsed = tryParseJson(data.output_text ?? '') as { ideas?: Idea[] } | null
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>
+    }
+    const raw = data.choices?.[0]?.message?.content ?? ''
+    const parsed = tryParseJson(raw) as { ideas?: Idea[] } | null
 
     if (!parsed?.ideas || !Array.isArray(parsed.ideas) || parsed.ideas.length === 0) {
       return NextResponse.json({
