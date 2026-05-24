@@ -1,6 +1,4 @@
 'use client'
-
-import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 
 type Idea = {
@@ -11,6 +9,7 @@ type Idea = {
   time: string
   materialsUsed: string
   steps: string[]
+  imageUrl?: string
 }
 
 type StoredResult = {
@@ -129,7 +128,8 @@ export default function ResultsPage() {
           {ideas.map((idea, idx) => (
             <article key={`${idea.title}-${idx}`} className="direction-card result-card">
               <div className="image-wrap">
-                <Image src={cardImages[idx % cardImages.length]} alt={idea.title} fill sizes="(max-width: 768px) 100vw, 33vw" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={idea.imageUrl || cardImages[idx % cardImages.length]} alt={idea.title} />
                 <span className="image-label">{`Design ${idx + 1}`}</span>
               </div>
               <h3>{idea.title}</h3>

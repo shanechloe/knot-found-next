@@ -16,6 +16,7 @@ type Idea = {
   time: string
   materialsUsed: string
   steps: string[]
+  imageUrl?: string
 }
 
 function toDifficulty(value: unknown): Idea['difficulty'] {
@@ -36,6 +37,37 @@ function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<Ge
     steps: Array.isArray(maybe.steps)
       ? maybe.steps.map((s) => cleanText(s, '')).filter(Boolean).slice(0, 4)
       : ['Arrange your selected pieces.', 'Assemble core structure.', 'Add accents and secure joins.', 'Test fit and finalize.'],
+  }
+}
+
+async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | undefined> {
+  try {
+    const prompt = [
+      'Editorial jewelry product photo on soft neutral background.',
+      `Style: ${idea.style}.`,
+      `Piece type: ${idea.type}.`,
+      `Materials: ${idea.materialsUsed}.`,
+      'High detail, premium lighting, clean composition, no text, no watermark.',
+    ].join(' ')
+
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt,
+        size: '1024x1024',
+      }),
+    })
+
+    if (!response.ok) return undefined
+    const data = (await response.json()) as { data?: Array<{ url?: string }> }
+    return data.data?.[0]?.url
+  } catch {
+    return undefined
   }
 }
 
@@ -198,6 +230,12 @@ export async function POST(request: Request) {
     }
 
     const ideas = rawIdeas.slice(0, 3).map((idea, idx) => normalizeIdea(idea, idx, normalized))
+
+    for (let i = 0; i < ideas.length; i += 1) {
+      const imageUrl = await generateIdeaImage(apiKey, ideas[i])
+      if (imageUrl) ideas[i].imageUrl = imageUrl
+    }
+
     return NextResponse.json({ ideas, source: 'openai' })
   } catch (error) {
     return NextResponse.json({
