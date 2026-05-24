@@ -506,6 +506,11 @@ footer p {
   cursor: pointer;
 }
 
+.cta-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .optional-tag {
   margin-left: 0.45rem;
   font-size: 0.76rem;
@@ -556,6 +561,10 @@ footer p {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.error-text {
+  color: #8a1538;
 }
 
 @media (max-width: 900px) {

@@ -1,11 +1,13 @@
 'use client'
 
-import { ChangeEvent, useMemo, useState } from 'react'
+import { ChangeEvent, FormEvent, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type PreviewImage = {
   id: string
   name: string
   url: string
+  dataUrl: string
 }
 
 const KNOWN_MATERIALS = [
@@ -43,13 +45,25 @@ function toMaterialKeywords(fileName: string) {
   return known.length > 0 ? known : fallback
 }
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('Could not read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function StartCreatingPage() {
+  const router = useRouter()
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
   const [materialsText, setMaterialsText] = useState('')
   const [autoFillNote, setAutoFillNote] = useState('')
   const [type, setType] = useState('Necklace')
   const [style, setStyle] = useState('Boho')
   const [purpose, setPurpose] = useState('Everyday wear')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState('')
 
   const previewCountText = useMemo(() => {
     if (previewImages.length === 0) return 'No images selected yet.'
@@ -57,15 +71,18 @@ export default function StartCreatingPage() {
     return `${previewImages.length} images selected.`
   }, [previewImages.length])
 
-  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files
     if (!fileList || fileList.length === 0) return
 
-    const nextImages: PreviewImage[] = Array.from(fileList).map((file) => ({
-      id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-    }))
+    const nextImages: PreviewImage[] = await Promise.all(
+      Array.from(fileList).map(async (file) => ({
+        id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
+        name: file.name,
+        url: URL.createObjectURL(file),
+        dataUrl: await fileToDataUrl(file),
+      })),
+    )
 
     setPreviewImages((current) => [...current, ...nextImages])
 
@@ -96,6 +113,49 @@ export default function StartCreatingPage() {
     setType('Necklace')
     setStyle('Boho')
     setPurpose('Everyday wear')
+    setGenerateError('')
+  }
+
+  const handleGenerate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsGenerating(true)
+    setGenerateError('')
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          materials: materialsText,
+          type,
+          style,
+          purpose,
+          images: previewImages.map((img) => img.dataUrl).slice(0, 3),
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data?.error || 'Generation failed.')
+
+      sessionStorage.setItem(
+        'charmchemy:lastResult',
+        JSON.stringify({
+          ideas: data.ideas,
+          style,
+          type,
+          purpose,
+          materials: materialsText,
+          source: data.source,
+          warning: data.warning ?? '',
+        }),
+      )
+
+      router.push('/results?source=ai')
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Could not generate ideas. Please try again.')
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   return (
@@ -119,7 +179,7 @@ export default function StartCreatingPage() {
           </p>
         </section>
 
-        <form className="start-card" action="/results" method="get">
+        <form className="start-card" onSubmit={handleGenerate}>
           <section className="upload-primary">
           <h2>Upload your materials</h2>
           <p className="start-help">
@@ -221,9 +281,12 @@ export default function StartCreatingPage() {
           </div>
 
           <div className="action-row">
-            <button className="cta cta-button" type="submit">Generate Ideas</button>
+            <button className="cta cta-button" type="submit" disabled={isGenerating}>
+              {isGenerating ? 'Generating Ideas...' : 'Generate Ideas'}
+            </button>
             <button className="lang-btn cta-button" type="button" onClick={clearAll}>Clear All</button>
           </div>
+          {generateError && <p className="start-help error-text">{generateError}</p>}
         </form>
       </main>
     </div>

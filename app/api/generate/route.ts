@@ -1,0 +1,170 @@
+import { NextResponse } from 'next/server'
+
+type GenerateBody = {
+  materials?: string
+  style?: string
+  type?: string
+  purpose?: string
+  images?: string[]
+}
+
+type Idea = {
+  title: string
+  type: string
+  style: string
+  difficulty: 'Easy' | 'Medium' | 'Advanced'
+  time: string
+  materialsUsed: string
+  steps: string[]
+}
+
+function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' | 'type' | 'purpose'>>): Idea[] {
+  const normalizedType = input.type === 'Surprise Me' ? 'Jewelry Piece' : input.type
+  return [
+    {
+      title: 'Moonlit Pearl Drops',
+      type: 'Earrings',
+      style: 'Romantic',
+      difficulty: 'Easy',
+      time: '25 min',
+      materialsUsed: 'pearl beads, gold hooks, small clear beads',
+      steps: [
+        'Arrange one pearl bead with two clear beads.',
+        'Attach them to a head pin.',
+        'Connect to the earring hook.',
+        'Repeat for the second earring.',
+      ],
+    },
+    {
+      title: `${input.style} Drift ${normalizedType}`,
+      type: normalizedType,
+      style: input.style,
+      difficulty: 'Medium',
+      time: '40 min',
+      materialsUsed: input.materials || 'mixed stash pieces',
+      steps: [
+        'Sort your focal pieces and supporting beads by size.',
+        'Build the base structure and secure with jump rings.',
+        'Layer texture elements for depth and movement.',
+        `Adjust proportions for ${input.purpose.toLowerCase()} and complete closures.`,
+      ],
+    },
+    {
+      title: `Last-Bit ${normalizedType} Remix`,
+      type: normalizedType,
+      style: input.style === 'Minimal' ? 'Playful' : input.style,
+      difficulty: 'Easy',
+      time: '30 min',
+      materialsUsed: `${input.materials || 'remaining components'} + leftover findings`,
+      steps: [
+        'Group remaining components into 2-3 mini sets.',
+        'Create an asymmetrical but balanced arrangement.',
+        'Attach all pieces securely with consistent spacing.',
+        'Refine proportions and test wearability.',
+      ],
+    },
+  ]
+}
+
+function cleanText(value: unknown, fallback: string) {
+  if (typeof value !== 'string') return fallback
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : fallback
+}
+
+function tryParseJson(text: string) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/)
+    if (!match) return null
+    try {
+      return JSON.parse(match[0])
+    } catch {
+      return null
+    }
+  }
+}
+
+export async function POST(request: Request) {
+  const body = (await request.json()) as GenerateBody
+
+  const normalized = {
+    materials: cleanText(body.materials, 'mixed beads and chain offcuts'),
+    style: cleanText(body.style, 'Boho'),
+    type: cleanText(body.type, 'Necklace'),
+    purpose: cleanText(body.purpose, 'Everyday wear'),
+  }
+
+  const images = Array.isArray(body.images) ? body.images.slice(0, 3).filter(Boolean) : []
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    return NextResponse.json({
+      ideas: fallbackIdeas(normalized),
+      source: 'fallback',
+      warning: 'OPENAI_API_KEY not configured. Showing fallback ideas.',
+    })
+  }
+
+  try {
+    const content: Array<Record<string, string>> = [
+      {
+        type: 'input_text',
+        text:
+          `Generate 3 practical DIY jewelry design ideas as strict JSON. ` +
+          `Input: materials=${normalized.materials}, style=${normalized.style}, type=${normalized.type}, purpose=${normalized.purpose}. ` +
+          `Return JSON with this shape only: {"ideas":[{"title":"","type":"","style":"","difficulty":"Easy|Medium|Advanced","time":"","materialsUsed":"","steps":["",""]}]}. ` +
+          `Each idea must have exactly 4 concise steps.`,
+      },
+    ]
+
+    for (const image of images) {
+      content.push({
+        type: 'input_image',
+        image_url: image,
+      })
+    }
+
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        input: [
+          {
+            role: 'user',
+            content,
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`OpenAI error: ${response.status} ${errorText}`)
+    }
+
+    const data = (await response.json()) as { output_text?: string }
+    const parsed = tryParseJson(data.output_text ?? '') as { ideas?: Idea[] } | null
+
+    if (!parsed?.ideas || !Array.isArray(parsed.ideas) || parsed.ideas.length === 0) {
+      return NextResponse.json({
+        ideas: fallbackIdeas(normalized),
+        source: 'fallback',
+        warning: 'Model response was not parseable JSON. Showing fallback ideas.',
+      })
+    }
+
+    return NextResponse.json({ ideas: parsed.ideas.slice(0, 3), source: 'openai' })
+  } catch (error) {
+    return NextResponse.json({
+      ideas: fallbackIdeas(normalized),
+      source: 'fallback',
+      warning: error instanceof Error ? error.message : 'Unknown generation error',
+    })
+  }
+}
