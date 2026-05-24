@@ -64,8 +64,12 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
     })
 
     if (!response.ok) return undefined
-    const data = (await response.json()) as { data?: Array<{ url?: string }> }
-    return data.data?.[0]?.url
+    const data = (await response.json()) as { data?: Array<{ url?: string; b64_json?: string }> }
+    const first = data.data?.[0]
+    if (!first) return undefined
+    if (first.url) return first.url
+    if (first.b64_json) return `data:image/png;base64,${first.b64_json}`
+    return undefined
   } catch {
     return undefined
   }
