@@ -108,7 +108,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const content: Array<Record<string, string>> = [
+    const content: Array<Record<string, unknown>> = [
       {
         type: 'text',
         text:
@@ -122,7 +122,10 @@ export async function POST(request: Request) {
     for (const image of images) {
       content.push({
         type: 'image_url',
-        image_url: image,
+        image_url: {
+          url: image,
+          detail: 'low',
+        },
       })
     }
 
