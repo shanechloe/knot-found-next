@@ -5,7 +5,7 @@ type Idea = {
   title: string
   type: string
   style: string
-  difficulty: 'Easy' | 'Medium' | 'Advanced'
+  difficulty: 'Easy' | 'Medium' | 'Difficult'
   time: string
   materialsUsed: string
   steps: string[]
@@ -17,6 +17,7 @@ type StoredResult = {
   style?: string
   type?: string
   purpose?: string
+  difficulty?: string
   materials?: string
   source?: string
   warning?: string
@@ -29,20 +30,6 @@ const cardImages = [
 ]
 
 const fallbackIdeas: Idea[] = [
-  {
-    title: 'Moonlit Pearl Drops',
-    type: 'Earrings',
-    style: 'Romantic',
-    difficulty: 'Easy',
-    time: '25 min',
-    materialsUsed: 'pearl beads, gold hooks, small clear beads',
-    steps: [
-      'Arrange one pearl bead with two clear beads.',
-      'Attach them to a head pin.',
-      'Connect to the earring hook.',
-      'Repeat for the second earring.',
-    ],
-  },
   {
     title: 'Boho Drift Necklace',
     type: 'Necklace',
@@ -57,20 +44,6 @@ const fallbackIdeas: Idea[] = [
       'Finish and test comfort for your planned purpose.',
     ],
   },
-  {
-    title: 'Last-Bit Remix',
-    type: 'Charm',
-    style: 'Playful',
-    difficulty: 'Easy',
-    time: '30 min',
-    materialsUsed: 'leftover findings',
-    steps: [
-      'Group your remaining components into mini sets.',
-      'Create an asymmetrical but balanced arrangement.',
-      'Attach all pieces securely with consistent spacing.',
-      'Refine proportions, then complete final closures.',
-    ],
-  },
 ]
 
 export default function ResultsPage() {
@@ -79,6 +52,7 @@ export default function ResultsPage() {
     style: 'Boho',
     type: 'Necklace',
     purpose: 'Everyday wear',
+    difficulty: 'Medium',
     warning: 'Showing fallback ideas. Generate from Start Creating for live AI output.',
   })
 
@@ -113,19 +87,19 @@ export default function ResultsPage() {
         <section className="start-hero">
           <span className="kicker">Your Results</span>
           <h1>Your jewelry ideas are ready.</h1>
-          <p>Here are 3 makeable designs based on your materials.</p>
+          <p>Here is 1 makeable design based on your materials.</p>
           <p>
             Source: <strong>{result.source === 'openai' ? 'OpenAI' : 'Fallback'}</strong>
           </p>
           <p>
             Style: <strong>{result.style || 'Boho'}</strong> | Type: <strong>{result.type || 'Necklace'}</strong> | Purpose:{' '}
-            <strong>{result.purpose || 'Everyday wear'}</strong>
+            <strong>{result.purpose || 'Everyday wear'}</strong> | Difficulty: <strong>{result.difficulty || 'Medium'}</strong>
           </p>
           {result.warning ? <p className="start-help error-text">{result.warning}</p> : null}
         </section>
 
         <section className="result-grid">
-          {ideas.map((idea, idx) => (
+          {ideas.slice(0, 1).map((idea, idx) => (
             <article key={`${idea.title}-${idx}`} className="direction-card result-card">
               <div className="image-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

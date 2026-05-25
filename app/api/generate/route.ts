@@ -5,6 +5,7 @@ type GenerateBody = {
   style?: string
   type?: string
   purpose?: string
+  difficulty?: string
   images?: string[]
 }
 
@@ -12,7 +13,7 @@ type Idea = {
   title: string
   type: string
   style: string
-  difficulty: 'Easy' | 'Medium' | 'Advanced'
+  difficulty: 'Easy' | 'Medium' | 'Difficult'
   time: string
   materialsUsed: string
   steps: string[]
@@ -20,11 +21,11 @@ type Idea = {
 }
 
 function toDifficulty(value: unknown): Idea['difficulty'] {
-  if (value === 'Easy' || value === 'Medium' || value === 'Advanced') return value
+  if (value === 'Easy' || value === 'Medium' || value === 'Difficult') return value
   return 'Medium'
 }
 
-function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<GenerateBody, 'style' | 'type' | 'materials' | 'purpose'>>): Idea {
+function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<GenerateBody, 'style' | 'type' | 'materials' | 'purpose' | 'difficulty'>>): Idea {
   const maybe = (input && typeof input === 'object') ? (input as Record<string, unknown>) : {}
   const ideaType = cleanText(maybe.type, defaults.type === 'Surprise Me' ? 'Jewelry Piece' : defaults.type)
   return {
@@ -75,28 +76,14 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
   }
 }
 
-function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' | 'type' | 'purpose'>>): Idea[] {
+function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' | 'type' | 'purpose' | 'difficulty'>>): Idea[] {
   const normalizedType = input.type === 'Surprise Me' ? 'Jewelry Piece' : input.type
   return [
-    {
-      title: 'Moonlit Pearl Drops',
-      type: 'Earrings',
-      style: 'Romantic',
-      difficulty: 'Easy',
-      time: '25 min',
-      materialsUsed: 'pearl beads, gold hooks, small clear beads',
-      steps: [
-        'Arrange one pearl bead with two clear beads.',
-        'Attach them to a head pin.',
-        'Connect to the earring hook.',
-        'Repeat for the second earring.',
-      ],
-    },
     {
       title: `${input.style} Drift ${normalizedType}`,
       type: normalizedType,
       style: input.style,
-      difficulty: 'Medium',
+      difficulty: toDifficulty(input.difficulty),
       time: '40 min',
       materialsUsed: input.materials || 'mixed stash pieces',
       steps: [
@@ -104,20 +91,6 @@ function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' 
         'Build the base structure and secure with jump rings.',
         'Layer texture elements for depth and movement.',
         `Adjust proportions for ${input.purpose.toLowerCase()} and complete closures.`,
-      ],
-    },
-    {
-      title: `Last-Bit ${normalizedType} Remix`,
-      type: normalizedType,
-      style: input.style === 'Minimal' ? 'Playful' : input.style,
-      difficulty: 'Easy',
-      time: '30 min',
-      materialsUsed: `${input.materials || 'remaining components'} + leftover findings`,
-      steps: [
-        'Group remaining components into 2-3 mini sets.',
-        'Create an asymmetrical but balanced arrangement.',
-        'Attach all pieces securely with consistent spacing.',
-        'Refine proportions and test wearability.',
       ],
     },
   ]
@@ -151,6 +124,7 @@ export async function POST(request: Request) {
     style: cleanText(body.style, 'Boho'),
     type: cleanText(body.type, 'Necklace'),
     purpose: cleanText(body.purpose, 'Everyday wear'),
+    difficulty: cleanText(body.difficulty, 'Medium'),
   }
 
   const images = Array.isArray(body.images) ? body.images.slice(0, 3).filter(Boolean) : []
@@ -169,10 +143,10 @@ export async function POST(request: Request) {
       {
         type: 'text',
         text:
-          `Generate 3 practical DIY jewelry design ideas as strict JSON. ` +
-          `Input: materials=${normalized.materials}, style=${normalized.style}, type=${normalized.type}, purpose=${normalized.purpose}. ` +
-          `Return JSON with this shape only: {"ideas":[{"title":"","type":"","style":"","difficulty":"Easy|Medium|Advanced","time":"","materialsUsed":"","steps":["",""]}]}. ` +
-          `Each idea must have exactly 4 concise steps.`,
+          `Generate 1 practical DIY jewelry design idea as strict JSON. ` +
+          `Input: materials=${normalized.materials}, style=${normalized.style}, type=${normalized.type}, purpose=${normalized.purpose}, difficulty=${normalized.difficulty}. ` +
+          `Return JSON with this shape only: {"ideas":[{"title":"","type":"","style":"","difficulty":"Easy|Medium|Difficult","time":"","materialsUsed":"","steps":["",""]}]}. ` +
+          `Return exactly 1 idea and it must have exactly 4 concise steps.`,
       },
     ]
 
@@ -233,7 +207,7 @@ export async function POST(request: Request) {
       })
     }
 
-    const ideas = rawIdeas.slice(0, 3).map((idea, idx) => normalizeIdea(idea, idx, normalized))
+    const ideas = rawIdeas.slice(0, 1).map((idea, idx) => normalizeIdea(idea, idx, normalized))
 
     for (let i = 0; i < ideas.length; i += 1) {
       const imageUrl = await generateIdeaImage(apiKey, ideas[i])

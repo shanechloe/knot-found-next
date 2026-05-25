@@ -62,6 +62,7 @@ export default function StartCreatingPage() {
   const [type, setType] = useState('Necklace')
   const [style, setStyle] = useState('Boho')
   const [purpose, setPurpose] = useState('Everyday wear')
+  const [difficulty, setDifficulty] = useState('Medium')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState('')
 
@@ -113,6 +114,7 @@ export default function StartCreatingPage() {
     setType('Necklace')
     setStyle('Boho')
     setPurpose('Everyday wear')
+    setDifficulty('Medium')
     setGenerateError('')
   }
 
@@ -130,6 +132,7 @@ export default function StartCreatingPage() {
           type,
           style,
           purpose,
+          difficulty,
           images: previewImages.map((img) => img.dataUrl).slice(0, 3),
         }),
       })
@@ -144,6 +147,7 @@ export default function StartCreatingPage() {
           style,
           type,
           purpose,
+          difficulty,
           materials: materialsText,
           source: data.source,
           warning: data.warning ?? '',
@@ -175,7 +179,7 @@ export default function StartCreatingPage() {
           <h1>Create your first AI jewelry design plan</h1>
           <p>
             Tell Charmchemy what materials you have and the style you want. We
-            will generate 3 makeable design directions.
+            will generate 1 makeable design direction.
           </p>
         </section>
 
@@ -276,6 +280,17 @@ export default function StartCreatingPage() {
                 <option>Wedding</option>
                 <option>Market / Selling</option>
                 <option>Upcycle project</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid form-grid-single">
+            <div>
+              <h2>Choose difficulty</h2>
+              <select className="start-input" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                <option>Easy</option>
+                <option>Medium</option>
+                <option>Difficult</option>
               </select>
             </div>
           </div>
