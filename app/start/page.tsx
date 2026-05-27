@@ -19,41 +19,6 @@ type StoredStartInput = {
   previewImages?: Array<{ id: string; name: string; dataUrl: string }>
 }
 
-const KNOWN_MATERIALS = [
-  'beads',
-  'pearl',
-  'pearls',
-  'chain',
-  'chains',
-  'charm',
-  'charms',
-  'hook',
-  'hooks',
-  'wire',
-  'clasp',
-  'findings',
-  'ring',
-  'rings',
-  'stone',
-  'stones',
-  'crystal',
-  'crystals',
-  'gold',
-  'silver',
-]
-
-function toMaterialKeywords(fileName: string) {
-  const normalized = fileName
-    .toLowerCase()
-    .replace(/\.[a-z0-9]+$/i, '')
-    .replace(/[_-]+/g, ' ')
-
-  const words = normalized.split(/\s+/).filter(Boolean)
-  const known = words.filter((word) => KNOWN_MATERIALS.includes(word))
-  const fallback = words.filter((word) => word.length > 2).slice(0, 4)
-  return known.length > 0 ? known : fallback
-}
-
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
@@ -102,8 +67,7 @@ export default function StartCreatingPage() {
 
   const previewCountText = useMemo(() => {
     if (previewImages.length === 0) return 'No images selected yet.'
-    if (previewImages.length === 1) return '1 image selected.'
-    return `${previewImages.length} images selected.`
+    return '1 image selected.'
   }, [previewImages.length])
 
   const handleImageSelect = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -119,20 +83,8 @@ export default function StartCreatingPage() {
       })),
     )
 
-    setPreviewImages((current) => [...current, ...nextImages])
-
-    const detected = Array.from(fileList)
-      .flatMap((file) => toMaterialKeywords(file.name))
-      .map((word) => word.trim())
-      .filter(Boolean)
-
-    const uniqueDetected = Array.from(new Set(detected))
-    if (uniqueDetected.length > 0) {
-      setMaterialsText(uniqueDetected.join(', '))
-      setAutoFillNote('Materials auto-filled from image filenames. You can edit or leave blank.')
-    } else {
-      setAutoFillNote('Could not detect material keywords from filenames. You can type manually or leave blank.')
-    }
+    setPreviewImages(nextImages.slice(0, 1))
+    setAutoFillNote('')
 
     event.target.value = ''
   }
@@ -167,7 +119,7 @@ export default function StartCreatingPage() {
           style,
           purpose,
           difficulty,
-          images: previewImages.map((img) => img.dataUrl).slice(0, 3),
+          images: previewImages.map((img) => img.dataUrl).slice(0, 1),
         }),
       })
 
@@ -237,19 +189,18 @@ export default function StartCreatingPage() {
           <section className="upload-primary">
           <h2>Upload your materials</h2>
           <p className="start-help">
-            Add photos of your beads, charms, chains, findings, or leftover supplies.
+            Add a photo of your beads, charms, chains, findings, or leftover supplies.
           </p>
           <label className="upload-box upload-box-large" htmlFor="material-images">
-            <span className="upload-title">Drag and drop photos here</span>
+            <span className="upload-title">Drag and drop a photo here</span>
             <span className="upload-subtitle">or click the button below to upload</span>
-            <span className="upload-button">Upload photos</span>
+            <span className="upload-button">Upload photo</span>
           </label>
           <input
             id="material-images"
             className="file-input"
             type="file"
             accept="image/*"
-            multiple
             onChange={handleImageSelect}
           />
 
