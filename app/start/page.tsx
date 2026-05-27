@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, FormEvent, useMemo, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type PreviewImage = {
@@ -8,6 +8,15 @@ type PreviewImage = {
   name: string
   url: string
   dataUrl: string
+}
+
+type StoredStartInput = {
+  materialsText?: string
+  type?: string
+  style?: string
+  purpose?: string
+  difficulty?: string
+  previewImages?: Array<{ id: string; name: string; dataUrl: string }>
 }
 
 const KNOWN_MATERIALS = [
@@ -65,6 +74,31 @@ export default function StartCreatingPage() {
   const [difficulty, setDifficulty] = useState('Medium')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState('')
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('charmchemy:lastStartInput')
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as StoredStartInput
+      if (parsed.materialsText) setMaterialsText(parsed.materialsText)
+      if (parsed.type) setType(parsed.type)
+      if (parsed.style) setStyle(parsed.style)
+      if (parsed.purpose) setPurpose(parsed.purpose)
+      if (parsed.difficulty) setDifficulty(parsed.difficulty)
+      if (Array.isArray(parsed.previewImages) && parsed.previewImages.length > 0) {
+        setPreviewImages(
+          parsed.previewImages.map((image, idx) => ({
+            id: image.id || `${image.name}-${idx}`,
+            name: image.name || `image-${idx + 1}.png`,
+            dataUrl: image.dataUrl,
+            url: image.dataUrl,
+          })),
+        )
+      }
+    } catch {
+      // Ignore invalid cache.
+    }
+  }, [])
 
   const previewCountText = useMemo(() => {
     if (previewImages.length === 0) return 'No images selected yet.'
@@ -151,6 +185,22 @@ export default function StartCreatingPage() {
           materials: materialsText,
           source: data.source,
           warning: data.warning ?? '',
+        }),
+      )
+
+      sessionStorage.setItem(
+        'charmchemy:lastStartInput',
+        JSON.stringify({
+          materialsText,
+          type,
+          style,
+          purpose,
+          difficulty,
+          previewImages: previewImages.map((img) => ({
+            id: img.id,
+            name: img.name,
+            dataUrl: img.dataUrl,
+          })),
         }),
       )
 

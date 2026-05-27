@@ -72,6 +72,43 @@ export default function ResultsPage() {
 
   const ideas = useMemo(() => result.ideas ?? fallbackIdeas, [result.ideas])
 
+  const handleSaveImage = async (imageUrl: string, title: string) => {
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'charmchemy-design'}.png`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      alert('Could not save image. Please try again.')
+    }
+  }
+
+  const handleCopyText = async (idea: Idea) => {
+    const text = [
+      idea.title,
+      `Type: ${idea.type}`,
+      `Style: ${idea.style}`,
+      `Difficulty: ${idea.difficulty}`,
+      `Time: ${idea.time}`,
+      `Materials used: ${idea.materialsUsed}`,
+      'Steps:',
+      ...idea.steps.map((step, index) => `${index + 1}. ${step}`),
+    ].join('\n')
+
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('Design text copied.')
+    } catch {
+      alert('Could not copy text. Please try again.')
+    }
+  }
+
   return (
     <div className="start-page-shell">
       <nav className="top-nav">
@@ -123,8 +160,16 @@ export default function ResultsPage() {
                 </ol>
               </div>
               <div className="result-actions">
-                <button type="button" className="chip">Save</button>
-                <button type="button" className="chip">Share</button>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => handleSaveImage(idea.imageUrl || cardImages[idx % cardImages.length], idea.title)}
+                >
+                  Save
+                </button>
+                <button type="button" className="chip" onClick={() => handleCopyText(idea)}>
+                  Copy Text
+                </button>
                 <a className="chip" href="/start">Regenerate this idea</a>
               </div>
             </article>

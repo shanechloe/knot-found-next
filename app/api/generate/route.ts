@@ -20,6 +20,80 @@ type Idea = {
   imageUrl?: string
 }
 
+type ImageUsage = {
+  input_tokens?: number
+  output_tokens?: number
+  total_tokens?: number
+  input_tokens_details?: {
+    text_tokens?: number
+    image_tokens?: number
+    cached_tokens?: number
+  }
+  output_tokens_details?: {
+    text_tokens?: number
+    image_tokens?: number
+  }
+}
+
+type ChatUsage = {
+  prompt_tokens?: number
+  completion_tokens?: number
+  total_tokens?: number
+  prompt_tokens_details?: {
+    cached_tokens?: number
+  }
+}
+
+const IMAGE_PRICING_PER_1M = {
+  textInput: 5,
+  textCachedInput: 1.25,
+  imageInput: 10,
+  imageOutput: 40,
+} as const
+
+const CHAT_PRICING_PER_1M = {
+  input: Number(process.env.OPENAI_GPT41_MINI_INPUT_PER_1M_USD ?? '0.4'),
+  cachedInput: Number(process.env.OPENAI_GPT41_MINI_CACHED_INPUT_PER_1M_USD ?? '0.1'),
+  output: Number(process.env.OPENAI_GPT41_MINI_OUTPUT_PER_1M_USD ?? '1.6'),
+} as const
+
+function estimateImageCostUSD(usage: ImageUsage): number | undefined {
+  const inputDetails = usage.input_tokens_details
+  const outputDetails = usage.output_tokens_details
+
+  if (!inputDetails || !outputDetails) return undefined
+
+  const textInputTokens = inputDetails.text_tokens ?? 0
+  const imageInputTokens = inputDetails.image_tokens ?? 0
+  const cachedInputTokens = inputDetails.cached_tokens ?? 0
+  const imageOutputTokens = outputDetails.image_tokens ?? 0
+
+  const nonCachedTextInputTokens = Math.max(0, textInputTokens - cachedInputTokens)
+  const nonCachedImageInputTokens = imageInputTokens
+
+  const cost =
+    (nonCachedTextInputTokens / 1_000_000) * IMAGE_PRICING_PER_1M.textInput +
+    (cachedInputTokens / 1_000_000) * IMAGE_PRICING_PER_1M.textCachedInput +
+    (nonCachedImageInputTokens / 1_000_000) * IMAGE_PRICING_PER_1M.imageInput +
+    (imageOutputTokens / 1_000_000) * IMAGE_PRICING_PER_1M.imageOutput
+
+  return Number.isFinite(cost) ? cost : undefined
+}
+
+function estimateChatCostUSD(usage: ChatUsage): number | undefined {
+  const promptTokens = usage.prompt_tokens ?? 0
+  const completionTokens = usage.completion_tokens ?? 0
+  const cachedTokens = usage.prompt_tokens_details?.cached_tokens ?? 0
+  const nonCachedPromptTokens = Math.max(0, promptTokens - cachedTokens)
+
+  const cost =
+    (nonCachedPromptTokens / 1_000_000) * CHAT_PRICING_PER_1M.input +
+    (cachedTokens / 1_000_000) * CHAT_PRICING_PER_1M.cachedInput +
+    (completionTokens / 1_000_000) * CHAT_PRICING_PER_1M.output
+
+  return Number.isFinite(cost) ? cost : undefined
+}
+
 function toDifficulty(value: unknown): Idea['difficulty'] {
   if (value === 'Easy' || value === 'Medium' || value === 'Difficult') return value
   return 'Medium'
@@ -43,6 +117,9 @@ function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<Ge
 
 async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | undefined> {
   try {
+    const imageSize = process.env.OPENAI_IMAGE_SIZE || '1024x1024'
+    const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'low'
+
     const prompt = [
       'Editorial jewelry product photo on soft neutral background.',
       `Style: ${idea.style}.`,
@@ -60,12 +137,28 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
       body: JSON.stringify({
         model: 'gpt-image-1',
         prompt,
-        size: '1024x1024',
+        size: imageSize,
+        quality: imageQuality,
       }),
     })
 
     if (!response.ok) return undefined
-    const data = (await response.json()) as { data?: Array<{ url?: string; b64_json?: string }> }
+    const data = (await response.json()) as {
+      data?: Array<{ url?: string; b64_json?: string }>
+      usage?: ImageUsage
+    }
+
+    const usage = data.usage
+    const estimatedCost = usage ? estimateImageCostUSD(usage) : undefined
+    const textIn = usage?.input_tokens_details?.text_tokens ?? 0
+    const imageIn = usage?.input_tokens_details?.image_tokens ?? 0
+    const imageOut = usage?.output_tokens_details?.image_tokens ?? 0
+    const total = usage?.total_tokens ?? 0
+    const costText = typeof estimatedCost === 'number' ? `$${estimatedCost.toFixed(4)}` : 'n/a'
+    console.info(
+      `[openai:image] cost=${costText} model=gpt-image-1 quality=${imageQuality} size=${imageSize} total_tokens=${total} text_in=${textIn} image_in=${imageIn} image_out=${imageOut}`,
+    )
+
     const first = data.data?.[0]
     if (!first) return undefined
     if (first.url) return first.url
@@ -190,7 +283,20 @@ export async function POST(request: Request) {
 
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>
+      usage?: ChatUsage
     }
+
+    const chatUsage = data.usage
+    const chatEstimatedCost = chatUsage ? estimateChatCostUSD(chatUsage) : undefined
+    const chatCostText = typeof chatEstimatedCost === 'number' ? `$${chatEstimatedCost.toFixed(4)}` : 'n/a'
+    const promptTokens = chatUsage?.prompt_tokens ?? 0
+    const completionTokens = chatUsage?.completion_tokens ?? 0
+    const totalTokens = chatUsage?.total_tokens ?? 0
+    const cachedPromptTokens = chatUsage?.prompt_tokens_details?.cached_tokens ?? 0
+    console.info(
+      `[openai:ideas] cost=${chatCostText} model=gpt-4.1-mini total_tokens=${totalTokens} prompt_tokens=${promptTokens} completion_tokens=${completionTokens} cached_prompt_tokens=${cachedPromptTokens} images_in_context=${images.length}`,
+    )
+
     const raw = data.choices?.[0]?.message?.content ?? ''
     const parsed = tryParseJson(raw) as { ideas?: unknown[] } | unknown[] | null
     const rawIdeas = Array.isArray(parsed)
