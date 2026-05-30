@@ -106,10 +106,10 @@ export default function StartCreatingPage() {
         const compressedDataUrl = await resizeImageDataUrl(rawDataUrl)
 
         return {
-        id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
-        name: file.name,
-        url: compressedDataUrl,
-        dataUrl: compressedDataUrl,
+          id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
+          name: file.name,
+          url: compressedDataUrl,
+          dataUrl: compressedDataUrl,
         }
       }),
     )
@@ -208,6 +208,8 @@ export default function StartCreatingPage() {
       </nav>
 
       <main className="start-content">
+        <p className="progress-pill">Step 1 of 2: Upload materials and set your preferences</p>
+
         <section className="start-hero">
           <span className="kicker">Start Creating</span>
           <h1>Create your first AI jewelry design plan</h1>
@@ -256,23 +258,25 @@ export default function StartCreatingPage() {
           <p className="start-tip">Tip: Lay your materials on a plain background for better results.</p>
           </section>
 
-          <h2>
-            Describe more details <span className="optional-tag">Optional</span>
-          </h2>
-          <p className="start-help">
-            Tell us anything helpful, like colors, quantities, materials, or pieces you really want to use.
-          </p>
-          {autoFillNote && <p className="start-help">{autoFillNote}</p>}
-          <textarea
-            className="start-input"
-            rows={5}
-            name="materials"
-            value={materialsText}
-            onChange={(event) => setMaterialsText(event.target.value)}
-            placeholder="For example: I have 6 pearl beads, some gold wire, and I want something simple for everyday wear."
-          />
+          <section className="form-block">
+            <h2>
+              Describe more details <span className="optional-tag">Optional</span>
+            </h2>
+            <p className="start-help">
+              Tell us anything helpful, like colors, quantities, materials, or pieces you really want to use.
+            </p>
+            {autoFillNote && <p className="start-help">{autoFillNote}</p>}
+            <textarea
+              className="start-input"
+              rows={5}
+              name="materials"
+              value={materialsText}
+              onChange={(event) => setMaterialsText(event.target.value)}
+              placeholder="For example: I have 6 pearl beads, some gold wire, and I want something simple for everyday wear."
+            />
+          </section>
 
-          <div className="form-grid form-grid-single">
+          <div className="form-grid form-grid-single form-block">
             <div>
               <h2>What would you like to make?</h2>
               <p className="start-help">Not sure? Choose Surprise Me and let Charmchemy decide.</p>
@@ -287,7 +291,7 @@ export default function StartCreatingPage() {
             </div>
           </div>
 
-          <div className="form-grid form-grid-single">
+          <div className="form-grid form-grid-single form-block">
             <div>
               <h2>Choose a vibe</h2>
               <select className="start-input" name="style" value={style} onChange={(e) => setStyle(e.target.value)}>
@@ -303,7 +307,7 @@ export default function StartCreatingPage() {
             </div>
           </div>
 
-          <div className="form-grid form-grid-single">
+          <div className="form-grid form-grid-single form-block">
             <div>
               <h2>What is it for?</h2>
               <select className="start-input" name="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
@@ -317,7 +321,7 @@ export default function StartCreatingPage() {
             </div>
           </div>
 
-          <div className="form-grid form-grid-single">
+          <div className="form-grid form-grid-single form-block">
             <div>
               <h2>Choose difficulty</h2>
               <select className="start-input" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
