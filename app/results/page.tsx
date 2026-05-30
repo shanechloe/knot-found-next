@@ -125,13 +125,15 @@ export default function ResultsPage() {
           <span className="kicker">Your Results</span>
           <h1>Your jewelry ideas are ready.</h1>
           <p>Here is 1 makeable design based on your materials.</p>
-          <p>
-            Source: <strong>{result.source === 'openai' ? 'OpenAI' : 'Fallback'}</strong>
-          </p>
-          <p>
-            Style: <strong>{result.style || 'Boho'}</strong> | Type: <strong>{result.type || 'Necklace'}</strong> | Purpose:{' '}
-            <strong>{result.purpose || 'Everyday wear'}</strong> | Difficulty: <strong>{result.difficulty || 'Medium'}</strong>
-          </p>
+
+          <div className="result-summary-pills" aria-label="Generation summary">
+            <p><strong>Source:</strong> {result.source === 'openai' ? 'OpenAI' : 'Fallback'}</p>
+            <p><strong>Style:</strong> {result.style || 'Boho'}</p>
+            <p><strong>Type:</strong> {result.type || 'Necklace'}</p>
+            <p><strong>Purpose:</strong> {result.purpose || 'Everyday wear'}</p>
+            <p><strong>Difficulty:</strong> {result.difficulty || 'Medium'}</p>
+          </div>
+
           {result.warning ? <p className="start-help error-text">{result.warning}</p> : null}
         </section>
 
@@ -162,10 +164,10 @@ export default function ResultsPage() {
               <div className="result-actions">
                 <button
                   type="button"
-                  className="chip"
+                  className="cta cta-button"
                   onClick={() => handleSaveImage(idea.imageUrl || cardImages[idx % cardImages.length], idea.title)}
                 >
-                  Save
+                  Save Image
                 </button>
                 <button type="button" className="chip" onClick={() => handleCopyText(idea)}>
                   Copy Text
@@ -176,12 +178,17 @@ export default function ResultsPage() {
           ))}
         </section>
 
-        <section className="steps-panel" style={{ gridTemplateColumns: '1fr', textAlign: 'center' }}>
+        <section className="steps-panel steps-panel-cta">
           <div>
             <h2>Want more options?</h2>
             <p>Adjust your inputs and regenerate to explore fresh design paths.</p>
             <a href="/start">Try another prompt</a>
           </div>
+        </section>
+
+        <section className="result-bottom-actions" aria-label="Result actions">
+          <a className="cta" href="/start">Generate More Ideas</a>
+          <a className="lang-btn" href="/">Back to Home</a>
         </section>
       </main>
     </div>
