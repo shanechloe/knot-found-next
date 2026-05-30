@@ -112,6 +112,74 @@ a {
   justify-items: center;
 }
 
+.atelier-hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.atelier-hero-copy {
+  display: grid;
+  gap: 1.3rem;
+  align-content: center;
+}
+
+.atelier-hero-copy h1 {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2.8rem, 7vw, 5.8rem);
+  line-height: 0.95;
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+.atelier-hero-copy p {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.atelier-hero-card {
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(165deg, var(--color-bg-surface), var(--color-bg-warm));
+  box-shadow: var(--shadow-md);
+  display: grid;
+  gap: 0.7rem;
+}
+
+.atelier-card-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.atelier-hero-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.atelier-hero-card p {
+  margin: 0;
+  color: var(--color-text-body);
+  line-height: 1.6;
+}
+
+.atelier-hero-card ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.15rem;
+  color: var(--color-text-body);
+  line-height: 1.75;
+}
+
 .hero-actions {
   display: flex;
   gap: 0.75rem;
@@ -140,6 +208,11 @@ a {
 .hero-left {
   text-align: left;
   justify-items: start;
+}
+
+.atelier-note-block {
+  border-left: 3px solid color-mix(in srgb, var(--color-accent-gold) 70%, var(--line));
+  padding-left: 1rem;
 }
 
 .section-title-left {
@@ -352,6 +425,10 @@ footer p {
 @media (max-width: 900px) {
   .nav-links a:not(.start-btn) {
     display: none;
+  }
+
+  .atelier-hero {
+    grid-template-columns: 1fr;
   }
 
   .process-grid,
@@ -666,6 +743,16 @@ footer p {
   padding: 0.75rem;
   background: var(--color-bg-surface);
   box-shadow: var(--shadow-sm);
+}
+
+.atelier-results-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.atelier-result-card {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 .result-card:hover,

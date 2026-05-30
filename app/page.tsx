@@ -34,18 +34,30 @@ export default function HomePage() {
       </nav>
 
       <main className="content">
-        <section className="hero" id="start">
-          <span className="kicker">Made from maybe. Designed by AI. Crafted by you.</span>
-          <h1>
-            Turn your <em>craft stash</em> into jewelry magic.
-          </h1>
-          <p>
-            Upload your materials and get AI-generated jewelry designs you can
-            actually make.
-          </p>
-          <div className="hero-actions">
-            <a className="cta" href="/start">Start Creating</a>
-            <a className="lang-btn" href="#gallery">View Examples</a>
+        <section className="atelier-hero" id="start">
+          <div className="atelier-hero-copy">
+            <span className="kicker">Made from maybe. Designed by AI. Crafted by you.</span>
+            <h1>
+              Turn your <em>craft stash</em> into jewelry magic.
+            </h1>
+            <p>
+              Upload your materials and get AI-generated jewelry designs you can
+              actually make.
+            </p>
+            <div className="hero-actions">
+              <a className="cta" href="/start">Start Creating</a>
+              <a className="lang-btn" href="#gallery">View Examples</a>
+            </div>
+          </div>
+          <div className="atelier-hero-card" aria-label="Feature preview">
+            <p className="atelier-card-kicker">Atelier Notes</p>
+            <h3>One photo. One clear plan.</h3>
+            <p>We detect your materials, suggest a practical design, and keep every step makeable.</p>
+            <ul>
+              <li>Craft-first guidance</li>
+              <li>Elegant style presets</li>
+              <li>Beginner-friendly steps</li>
+            </ul>
           </div>
         </section>
 
@@ -87,7 +99,7 @@ export default function HomePage() {
           </ol>
         </section>
 
-        <section className="hero hero-left">
+        <section className="hero hero-left atelier-note-block">
           <span className="kicker">Common Pain Point</span>
           <h2 className="section-title-left">
             Have beads you bought &ldquo;just in case&rdquo;?
@@ -119,7 +131,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="hero hero-left">
+        <section className="hero hero-left atelier-note-block">
           <span className="kicker">Who It&apos;s For</span>
           <h2 className="section-title-left">
             Built for makers like you

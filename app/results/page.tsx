@@ -137,9 +137,9 @@ export default function ResultsPage() {
           {result.warning ? <p className="start-help error-text">{result.warning}</p> : null}
         </section>
 
-        <section className="result-grid">
+        <section className="result-grid atelier-results-grid">
           {ideas.slice(0, 1).map((idea, idx) => (
-            <article key={`${idea.title}-${idx}`} className="direction-card result-card">
+            <article key={`${idea.title}-${idx}`} className="direction-card result-card atelier-result-card">
               <div className="image-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={idea.imageUrl || cardImages[idx % cardImages.length]} alt={idea.title} />
