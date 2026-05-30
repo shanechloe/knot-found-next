@@ -489,6 +489,24 @@ footer p {
   box-shadow: var(--shadow-sm);
 }
 
+.start-card-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1.1rem;
+  align-items: start;
+}
+
+.upload-stage {
+  position: sticky;
+  top: 5.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.workbench-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .start-card h2 {
   margin: 1rem 0 0.3rem;
   font-size: 1.15rem;
@@ -598,6 +616,10 @@ footer p {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   margin-bottom: 0.8rem;
+}
+
+.preview-grid-single {
+  grid-template-columns: 1fr;
 }
 
 .preview-card {
@@ -811,6 +833,14 @@ footer p {
 }
 
 @media (max-width: 900px) {
+  .start-card-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-stage {
+    position: static;
+  }
+
   .form-grid,
   .result-grid {
     grid-template-columns: 1fr;
