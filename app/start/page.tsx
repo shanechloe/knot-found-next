@@ -28,6 +28,32 @@ function fileToDataUrl(file: File) {
   })
 }
 
+function resizeImageDataUrl(dataUrl: string, maxSide = 1024, quality = 0.72) {
+  return new Promise<string>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const { width, height } = img
+      const scale = Math.min(1, maxSide / Math.max(width, height))
+      const targetWidth = Math.max(1, Math.round(width * scale))
+      const targetHeight = Math.max(1, Math.round(height * scale))
+
+      const canvas = document.createElement('canvas')
+      canvas.width = targetWidth
+      canvas.height = targetHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('Could not process image'))
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => reject(new Error('Could not process image'))
+    img.src = dataUrl
+  })
+}
+
 export default function StartCreatingPage() {
   const router = useRouter()
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
@@ -75,12 +101,17 @@ export default function StartCreatingPage() {
     if (!fileList || fileList.length === 0) return
 
     const nextImages: PreviewImage[] = await Promise.all(
-      Array.from(fileList).map(async (file) => ({
+      Array.from(fileList).map(async (file) => {
+        const rawDataUrl = await fileToDataUrl(file)
+        const compressedDataUrl = await resizeImageDataUrl(rawDataUrl)
+
+        return {
         id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
         name: file.name,
-        url: URL.createObjectURL(file),
-        dataUrl: await fileToDataUrl(file),
-      })),
+        url: compressedDataUrl,
+        dataUrl: compressedDataUrl,
+        }
+      }),
     )
 
     setPreviewImages(nextImages.slice(0, 1))
@@ -106,6 +137,7 @@ export default function StartCreatingPage() {
 
   const handleGenerate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (isGenerating) return
     setIsGenerating(true)
     setGenerateError('')
 

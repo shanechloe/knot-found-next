@@ -57,6 +57,33 @@ const CHAT_PRICING_PER_1M = {
   output: Number(process.env.OPENAI_GPT41_MINI_OUTPUT_PER_1M_USD ?? '1.6'),
 } as const
 
+const REQUEST_MIN_INTERVAL_MS = 30_000
+const recentGenerateRequests = new Map<string, number>()
+
+function getClientIdentifier(request: Request) {
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  if (forwardedFor) return forwardedFor.split(',')[0].trim()
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp) return realIp.trim()
+  return 'unknown'
+}
+
+function isRateLimited(clientId: string) {
+  const now = Date.now()
+
+  for (const [id, lastAt] of recentGenerateRequests) {
+    if (now - lastAt > REQUEST_MIN_INTERVAL_MS) recentGenerateRequests.delete(id)
+  }
+
+  const lastAt = recentGenerateRequests.get(clientId)
+  if (typeof lastAt === 'number' && now - lastAt < REQUEST_MIN_INTERVAL_MS) {
+    return true
+  }
+
+  recentGenerateRequests.set(clientId, now)
+  return false
+}
+
 function estimateImageCostUSD(usage: ImageUsage): number | undefined {
   const inputDetails = usage.input_tokens_details
   const outputDetails = usage.output_tokens_details
@@ -210,6 +237,16 @@ function tryParseJson(text: string) {
 }
 
 export async function POST(request: Request) {
+  const clientId = getClientIdentifier(request)
+  if (isRateLimited(clientId)) {
+    return NextResponse.json(
+      {
+        error: 'Too many requests. Please wait 30 seconds and try again.',
+      },
+      { status: 429 },
+    )
+  }
+
   const body = (await request.json()) as GenerateBody
 
   const normalized = {
@@ -220,7 +257,7 @@ export async function POST(request: Request) {
     difficulty: cleanText(body.difficulty, 'Medium'),
   }
 
-  const images = Array.isArray(body.images) ? body.images.slice(0, 3).filter(Boolean) : []
+  const images = Array.isArray(body.images) ? body.images.slice(0, 1).filter(Boolean) : []
   const apiKey = process.env.OPENAI_API_KEY
 
   if (!apiKey) {
