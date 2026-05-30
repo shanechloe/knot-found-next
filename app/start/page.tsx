@@ -219,47 +219,46 @@ export default function StartCreatingPage() {
           </p>
         </section>
 
-        <form className="start-card start-card-layout" onSubmit={handleGenerate}>
-          <section className="upload-primary upload-stage">
-            <h2>Upload your materials</h2>
-            <p className="start-help">
-              Add a photo of your beads, charms, chains, findings, or leftover supplies.
-            </p>
-            <label className="upload-box upload-box-large" htmlFor="material-images">
-              <span className="upload-title">Drag and drop a photo here</span>
-              <span className="upload-subtitle">or click the button below to upload</span>
-              <span className="upload-button">Upload photo</span>
-            </label>
-            <input
-              id="material-images"
-              className="file-input"
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-            />
+        <form className="start-card" onSubmit={handleGenerate}>
+          <section className="upload-primary">
+          <h2>Upload your materials</h2>
+          <p className="start-help">
+            Add a photo of your beads, charms, chains, findings, or leftover supplies.
+          </p>
+          <label className="upload-box upload-box-large" htmlFor="material-images">
+            <span className="upload-title">Drag and drop a photo here</span>
+            <span className="upload-subtitle">or click the button below to upload</span>
+            <span className="upload-button">Upload photo</span>
+          </label>
+          <input
+            id="material-images"
+            className="file-input"
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+          />
 
-            <p className="start-help">{previewCountText}</p>
-            {previewImages.length > 0 && (
-              <div className="preview-grid preview-grid-single">
-                {previewImages.map((image) => (
-                  <article key={image.id} className="preview-card">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image.url} alt={image.name} />
-                    <div className="preview-meta">
-                      <p>{image.name}</p>
-                      <button type="button" className="chip" onClick={() => removeImage(image.id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-            <p className="start-tip">Tip: Lay your materials on a plain background for better results.</p>
+          <p className="start-help">{previewCountText}</p>
+          {previewImages.length > 0 && (
+            <div className="preview-grid">
+              {previewImages.map((image) => (
+                <article key={image.id} className="preview-card">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={image.url} alt={image.name} />
+                  <div className="preview-meta">
+                    <p>{image.name}</p>
+                    <button type="button" className="chip" onClick={() => removeImage(image.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          <p className="start-tip">Tip: Lay your materials on a plain background for better results.</p>
           </section>
 
-          <section className="workbench-panel">
-            <section className="form-block">
+          <section className="form-block">
             <h2>
               Describe more details <span className="optional-tag">Optional</span>
             </h2>
@@ -275,72 +274,71 @@ export default function StartCreatingPage() {
               onChange={(event) => setMaterialsText(event.target.value)}
               placeholder="For example: I have 6 pearl beads, some gold wire, and I want something simple for everyday wear."
             />
-            </section>
-
-            <div className="form-grid form-grid-single form-block">
-              <div>
-                <h2>What would you like to make?</h2>
-                <p className="start-help">Not sure? Choose Surprise Me and let Charmchemy decide.</p>
-                <select className="start-input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
-                  <option>Necklace</option>
-                  <option>Bracelet</option>
-                  <option>Earrings</option>
-                  <option>Ring</option>
-                  <option>Charm</option>
-                  <option>Surprise Me</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-grid form-grid-single form-block">
-              <div>
-                <h2>Choose a vibe</h2>
-                <select className="start-input" name="style" value={style} onChange={(e) => setStyle(e.target.value)}>
-                  <option>Minimal</option>
-                  <option>Romantic</option>
-                  <option>Vintage</option>
-                  <option>Boho</option>
-                  <option>Fairycore</option>
-                  <option>Elegant</option>
-                  <option>Playful</option>
-                  <option>Statement</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-grid form-grid-single form-block">
-              <div>
-                <h2>What is it for?</h2>
-                <select className="start-input" name="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
-                  <option>Everyday wear</option>
-                  <option>Gift</option>
-                  <option>Party</option>
-                  <option>Wedding</option>
-                  <option>Market / Selling</option>
-                  <option>Upcycle project</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-grid form-grid-single form-block">
-              <div>
-                <h2>Choose difficulty</h2>
-                <select className="start-input" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                  <option>Easy</option>
-                  <option>Medium</option>
-                  <option>Difficult</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="action-row">
-              <button className="cta cta-button" type="submit" disabled={isGenerating}>
-                {isGenerating ? 'Generating Ideas...' : 'Generate Ideas'}
-              </button>
-              <button className="lang-btn cta-button" type="button" onClick={clearAll}>Clear All</button>
-            </div>
-            {generateError && <p className="start-help error-text">{generateError}</p>}
           </section>
+
+          <div className="form-grid form-grid-single form-block">
+            <div>
+              <h2>What would you like to make?</h2>
+              <p className="start-help">Not sure? Choose Surprise Me and let Charmchemy decide.</p>
+              <select className="start-input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
+                <option>Necklace</option>
+                <option>Bracelet</option>
+                <option>Earrings</option>
+                <option>Ring</option>
+                <option>Charm</option>
+                <option>Surprise Me</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid form-grid-single form-block">
+            <div>
+              <h2>Choose a vibe</h2>
+              <select className="start-input" name="style" value={style} onChange={(e) => setStyle(e.target.value)}>
+                <option>Minimal</option>
+                <option>Romantic</option>
+                <option>Vintage</option>
+                <option>Boho</option>
+                <option>Fairycore</option>
+                <option>Elegant</option>
+                <option>Playful</option>
+                <option>Statement</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid form-grid-single form-block">
+            <div>
+              <h2>What is it for?</h2>
+              <select className="start-input" name="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+                <option>Everyday wear</option>
+                <option>Gift</option>
+                <option>Party</option>
+                <option>Wedding</option>
+                <option>Market / Selling</option>
+                <option>Upcycle project</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid form-grid-single form-block">
+            <div>
+              <h2>Choose difficulty</h2>
+              <select className="start-input" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                <option>Easy</option>
+                <option>Medium</option>
+                <option>Difficult</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="action-row">
+            <button className="cta cta-button" type="submit" disabled={isGenerating}>
+              {isGenerating ? 'Generating Ideas...' : 'Generate Ideas'}
+            </button>
+            <button className="lang-btn cta-button" type="button" onClick={clearAll}>Clear All</button>
+          </div>
+          {generateError && <p className="start-help error-text">{generateError}</p>}
         </form>
       </main>
     </div>
