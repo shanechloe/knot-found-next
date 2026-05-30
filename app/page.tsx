@@ -43,10 +43,16 @@ export default function HomePage() {
             Upload your materials and get AI-generated jewelry designs you can
             actually make.
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className="hero-actions">
             <a className="cta" href="/start">Start Creating</a>
             <a className="lang-btn" href="#gallery">View Examples</a>
           </div>
+        </section>
+
+        <section className="social-proof" aria-label="Trust signals">
+          <p>10,000+ ideas generated</p>
+          <p>Loved by DIY makers</p>
+          <p>Free to try</p>
         </section>
 
         <section className="steps-panel" id="how-it-works">
@@ -81,9 +87,9 @@ export default function HomePage() {
           </ol>
         </section>
 
-        <section className="hero" style={{ textAlign: 'left', justifyItems: 'start' }}>
+        <section className="hero hero-left">
           <span className="kicker">Common Pain Point</span>
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontStyle: 'italic' }}>
+          <h2 className="section-title-left">
             Have beads you bought &ldquo;just in case&rdquo;?
           </h2>
           <p>
@@ -113,19 +119,19 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="hero" style={{ textAlign: 'left', justifyItems: 'start' }}>
+        <section className="hero hero-left">
           <span className="kicker">Who It&apos;s For</span>
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontStyle: 'italic' }}>
+          <h2 className="section-title-left">
             Built for makers like you
           </h2>
-          <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--muted)', lineHeight: 1.8 }}>
+          <ul className="maker-list">
             <li>Stash collectors</li>
             <li>Beginner makers</li>
             <li>Etsy sellers & market creators</li>
           </ul>
         </section>
 
-        <section className="steps-panel" style={{ gridTemplateColumns: '1fr', textAlign: 'center' }}>
+        <section className="steps-panel steps-panel-cta">
           <div>
             <h2>Ready to make something from maybe?</h2>
             <a href="/start">Start Creating</a>
