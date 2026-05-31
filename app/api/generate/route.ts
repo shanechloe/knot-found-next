@@ -44,6 +44,15 @@ type ChatUsage = {
   }
 }
 
+type BeadProfile = {
+  dominantColors?: string[]
+  beadShapes?: string[]
+  specialBeads?: string[]
+  finishTypes?: string[]
+  mustKeepElements?: string[]
+  summary?: string
+}
+
 const IMAGE_PRICING_PER_1M = {
   textInput: 5,
   textCachedInput: 1.25,
@@ -153,10 +162,66 @@ function normalizeRequestedType(type: string) {
   return type
 }
 
-async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | undefined> {
+async function extractBeadProfile(apiKey: string, images: string[], materialsText: string): Promise<BeadProfile | undefined> {
+  if (images.length === 0) return undefined
+
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: 'text',
+      text:
+        'Analyze the uploaded bead photo and return strict JSON only. ' +
+        'Focus on material fidelity for reconstruction. ' +
+        `User typed materials: ${materialsText || 'none'}. ` +
+        'Return exact shape: {"dominantColors":[],"beadShapes":[],"specialBeads":[],"finishTypes":[],"mustKeepElements":[],"summary":""}. ' +
+        'mustKeepElements should include concrete constraints if visible (for example: black glossy round beads, clear crackle beads, frosted tube beads, yellow oval beads).',
+    },
+    {
+      type: 'image_url',
+      image_url: {
+        url: images[0],
+        detail: 'high',
+      },
+    },
+  ]
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4.1-mini',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a visual material analyzer. Return only valid JSON.',
+        },
+        {
+          role: 'user',
+          content,
+        },
+      ],
+    }),
+  })
+
+  if (!response.ok) return undefined
+
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>
+  }
+
+  const raw = data.choices?.[0]?.message?.content ?? ''
+  const parsed = tryParseJson(raw) as BeadProfile | null
+  if (!parsed || typeof parsed !== 'object') return undefined
+  return parsed
+}
+
+async function generateIdeaImage(apiKey: string, idea: Idea, beadProfile?: BeadProfile): Promise<string | undefined> {
   try {
     const imageSize = process.env.OPENAI_IMAGE_SIZE || '1024x1024'
-    const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'low'
+    const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'medium'
 
     const requestedType = normalizeRequestedType(idea.type)
     const pieceInstruction =
@@ -164,19 +229,31 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
         ? 'Pick the most suitable single jewelry type from: necklace, bracelet, earrings, ring, or charm.'
         : `Generate exactly this jewelry type: ${requestedType}.`
 
+    const profileSummary = beadProfile?.summary || ''
+    const dominantColors = beadProfile?.dominantColors?.join(', ') || ''
+    const beadShapes = beadProfile?.beadShapes?.join(', ') || ''
+    const specialBeads = beadProfile?.specialBeads?.join(', ') || ''
+    const finishTypes = beadProfile?.finishTypes?.join(', ') || ''
+    const mustKeepElements = beadProfile?.mustKeepElements?.join(', ') || ''
+
     const prompt = [
-      'Create a polished Chinese marketplace jewelry showcase image in a warm-beige studio palette.',
-      'Use a clean collage layout: one main hero shot of the full jewelry piece plus 2-3 smaller close-up detail panels.',
-      'Include clear views of clasp, extension chain, bead grouping, and craftsmanship details.',
-      'Visual style should feel premium, soft, romantic, handcrafted, and giftable.',
+      'Create a single clean jewelry product photo on a neutral warm studio background.',
+      'Do NOT create collage layouts, poster panels, or text overlays.',
+      'Highest priority: preserve bead inventory fidelity from the source materials.',
+      'Do not simplify into uniform beads. Keep mixed-bead variation and distinctive contrasts.',
       pieceInstruction,
       `Style: ${idea.style}.`,
       `Piece type: ${idea.type}.`,
       `Materials: ${idea.materialsUsed}.`,
-      'Use ALL available materials from the uploaded photo and the user input material list. Do not invent new materials.',
+      profileSummary ? `Bead inventory summary: ${profileSummary}.` : '',
+      dominantColors ? `Dominant colors to preserve: ${dominantColors}.` : '',
+      beadShapes ? `Bead shapes to preserve: ${beadShapes}.` : '',
+      specialBeads ? `Special bead types to preserve: ${specialBeads}.` : '',
+      finishTypes ? `Surface finishes to preserve: ${finishTypes}.` : '',
+      mustKeepElements ? `Mandatory visual elements: ${mustKeepElements}.` : '',
+      'Use ALL available materials from the uploaded photo and user material list. Do not invent new materials.',
       'Create a realistic design that can actually be made from the provided supplies.',
-      'Main panel must show the full piece completely in frame and visually centered.',
-      'Detail panels should show bead texture and color transitions in macro close-up.',
+      'Show the full piece completely in frame and visually centered.',
       'Use soft diffused lighting, subtle shadows, high realism, ultra-clean composition.',
       'No people, no hands, no watermark, no logo.',
     ].join(' ')
@@ -295,6 +372,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    const beadProfile = await extractBeadProfile(apiKey, images, normalized.materials)
+
     const requestedType = normalizeRequestedType(normalized.type)
     const typeInstruction =
       requestedType === 'Surprise Me'
@@ -388,7 +467,7 @@ export async function POST(request: Request) {
     const ideas = rawIdeas.slice(0, 1).map((idea, idx) => normalizeIdea(idea, idx, normalized))
 
     for (let i = 0; i < ideas.length; i += 1) {
-      const imageUrl = await generateIdeaImage(apiKey, ideas[i])
+      const imageUrl = await generateIdeaImage(apiKey, ideas[i], beadProfile)
       if (imageUrl) ideas[i].imageUrl = imageUrl
     }
 
