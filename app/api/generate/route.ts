@@ -142,17 +142,39 @@ function normalizeIdea(input: unknown, index: number, defaults: Required<Pick<Ge
   }
 }
 
+function normalizeRequestedType(type: string) {
+  const value = type.trim().toLowerCase()
+  if (!value || value === 'surprise me') return 'Surprise Me'
+  if (value.includes('necklace')) return 'Necklace'
+  if (value.includes('bracelet')) return 'Bracelet'
+  if (value.includes('earring')) return 'Earrings'
+  if (value.includes('ring')) return 'Ring'
+  if (value.includes('charm')) return 'Charm'
+  return type
+}
+
 async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | undefined> {
   try {
     const imageSize = process.env.OPENAI_IMAGE_SIZE || '1024x1024'
     const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'low'
 
+    const requestedType = normalizeRequestedType(idea.type)
+    const pieceInstruction =
+      requestedType === 'Surprise Me'
+        ? 'Pick the most suitable single jewelry type from: necklace, bracelet, earrings, ring, or charm.'
+        : `Generate exactly this jewelry type: ${requestedType}.`
+
     const prompt = [
-      'Editorial jewelry product photo on soft neutral background.',
+      'Luxury handmade jewelry product photo in a soft warm-beige studio scene.',
+      'Pastel crystal + pearl look, delicate handcrafted arrangement, elegant Chinese marketplace product aesthetic.',
+      pieceInstruction,
       `Style: ${idea.style}.`,
       `Piece type: ${idea.type}.`,
       `Materials: ${idea.materialsUsed}.`,
-      'High detail, premium lighting, clean composition, no text, no watermark.',
+      'Use ALL available materials from the uploaded photo and the user input material list. Do not invent new materials.',
+      'Create a realistic design that can actually be made from the provided supplies.',
+      'Show the full jewelry piece in frame, macro detail, high realism, clean composition.',
+      'No text, no watermark, no collage, no extra props, no hands.',
     ].join(' ')
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -269,12 +291,21 @@ export async function POST(request: Request) {
   }
 
   try {
+    const requestedType = normalizeRequestedType(normalized.type)
+    const typeInstruction =
+      requestedType === 'Surprise Me'
+        ? 'Choose the best single output type from: Necklace, Bracelet, Earrings, Ring, Charm.'
+        : `Output type must be exactly: ${requestedType}.`
+
     const content: Array<Record<string, unknown>> = [
       {
         type: 'text',
         text:
           `Generate 1 practical DIY jewelry design idea as strict JSON. ` +
           `Input: materials=${normalized.materials}, style=${normalized.style}, type=${normalized.type}, purpose=${normalized.purpose}, difficulty=${normalized.difficulty}. ` +
+          `${typeInstruction} ` +
+          `Use ALL available materials from the uploaded photo and the user input material list. Do not invent new materials. ` +
+          `Create a realistic design that can actually be made from the provided supplies. ` +
           `Return JSON with this shape only: {"ideas":[{"title":"","type":"","style":"","difficulty":"Easy|Medium|Difficult","time":"","materialsUsed":"","steps":["",""]}]}. ` +
           `Return exactly 1 idea and it must have exactly 4 concise steps.`,
       },
@@ -303,7 +334,7 @@ export async function POST(request: Request) {
           {
             role: 'system',
             content:
-              'You are a jewelry design assistant. Return only valid JSON and no markdown.',
+              'You are a jewelry design assistant. Prioritize material-faithful, makeable designs based only on visible uploaded materials. Return only valid JSON and no markdown.',
           },
           {
             role: 'user',
