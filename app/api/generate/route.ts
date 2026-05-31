@@ -165,16 +165,20 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
         : `Generate exactly this jewelry type: ${requestedType}.`
 
     const prompt = [
-      'Luxury handmade jewelry product photo in a soft warm-beige studio scene.',
-      'Pastel crystal + pearl look, delicate handcrafted arrangement, elegant Chinese marketplace product aesthetic.',
+      'Create a polished Chinese marketplace jewelry showcase image in a warm-beige studio palette.',
+      'Use a clean collage layout: one main hero shot of the full jewelry piece plus 2-3 smaller close-up detail panels.',
+      'Include clear views of clasp, extension chain, bead grouping, and craftsmanship details.',
+      'Visual style should feel premium, soft, romantic, handcrafted, and giftable.',
       pieceInstruction,
       `Style: ${idea.style}.`,
       `Piece type: ${idea.type}.`,
       `Materials: ${idea.materialsUsed}.`,
       'Use ALL available materials from the uploaded photo and the user input material list. Do not invent new materials.',
       'Create a realistic design that can actually be made from the provided supplies.',
-      'Show the full jewelry piece in frame, macro detail, high realism, clean composition.',
-      'No text, no watermark, no collage, no extra props, no hands.',
+      'Main panel must show the full piece completely in frame and visually centered.',
+      'Detail panels should show bead texture and color transitions in macro close-up.',
+      'Use soft diffused lighting, subtle shadows, high realism, ultra-clean composition.',
+      'No people, no hands, no watermark, no logo.',
     ].join(' ')
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
