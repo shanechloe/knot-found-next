@@ -1,6 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
+  --deep: #2c4a52;
+  --mid: #3d6b76;
+  --light: #a8c8ce;
+  --gold: #c9963a;
+  --amber: #e8b84b;
+  --rose: #c47b7b;
+  --bg-warm: #ede7d9;
+  --surface: #fdfaf5;
+  --text: #1a2c32;
+  --body: #3a4e54;
+  --dark: #1e3038;
+  --shadow-lg: 0 10px 40px rgba(44, 74, 82, 0.15), 0 4px 10px rgba(44, 74, 82, 0.08);
+  --shadow-glow: 0 0 0 3px rgba(201, 150, 58, 0.3);
+
   --color-brand-deep: #2c4a52;
   --color-brand-mid: #3d6b76;
   --color-brand-light: #a8c8ce;
