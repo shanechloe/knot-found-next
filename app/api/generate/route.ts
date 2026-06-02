@@ -182,7 +182,7 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'gpt-image-2',
         prompt,
         size: imageSize,
         quality: imageQuality,
@@ -203,7 +203,7 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
     const total = usage?.total_tokens ?? 0
     const costText = typeof estimatedCost === 'number' ? `$${estimatedCost.toFixed(4)}` : 'n/a'
     console.info(
-      `[openai:image] cost=${costText} model=gpt-image-1 quality=${imageQuality} size=${imageSize} total_tokens=${total} text_in=${textIn} image_in=${imageIn} image_out=${imageOut}`,
+      `[openai:image] cost=${costText} model=gpt-image-2 quality=${imageQuality} size=${imageSize} total_tokens=${total} text_in=${textIn} image_in=${imageIn} image_out=${imageOut}`,
     )
 
     const first = data.data?.[0]
