@@ -156,7 +156,7 @@ function normalizeRequestedType(type: string) {
 async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | undefined> {
   try {
     const imageSize = process.env.OPENAI_IMAGE_SIZE || '1024x1024'
-    const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'medium'
+    const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'low'
 
     const requestedType = normalizeRequestedType(idea.type)
     const pieceInstruction =
@@ -165,14 +165,19 @@ async function generateIdeaImage(apiKey: string, idea: Idea): Promise<string | u
         : `Generate exactly this jewelry type: ${requestedType}.`
 
     const prompt = [
-      'Editorial jewelry product photo on soft neutral background.',
+      'Create a realistic editorial jewelry product photo using the uploaded reference image as the only source of materials.',
+      'Use only the beads, charms, stones, crystals, pearls, metal parts, colors, shapes, textures, sizes, and finishes that are clearly visible in the uploaded image.',
+      'Do not invent, add, replace, recolor, reshape, resize, or reinterpret any material.',
+      'Do not introduce any new beads, gemstones, charms, pendants, chains, clasps, wires, metal findings, colors, textures, or decorative elements that are not visible in the uploaded image.',
+      `Design style: ${idea.style}.`,
+      `Jewelry type: ${idea.type}.`,
+      `User design notes: ${idea.materialsUsed}.`,
       pieceInstruction,
-      `Style: ${idea.style}.`,
-      `Piece type: ${idea.type}.`,
-      `Materials: ${idea.materialsUsed}.`,
-      'Preserve mixed-bead color diversity from provided materials; do not collapse to only 1-2 colors.',
-      'Preserve bead-shape variety (round, oval, translucent, frosted/crackle-like where specified).',
-      'High detail, premium lighting, clean composition, no text, no watermark.',
+      `Create a polished ${idea.type} design that follows the requested style, but always prioritize exact material accuracy over creativity.`,
+      'If the requested notes mention materials that are not visible in the uploaded image, ignore those unavailable materials and use only visible materials from the image.',
+      'The final image should be a premium product photograph of the completed jewelry piece on a soft neutral background.',
+      'Use clean composition, realistic textures, high detail, soft studio lighting, natural shadows, sharp focus, and an elegant handmade jewelry aesthetic.',
+      'No text, no logo, no watermark, no people, no hands, no props, no packaging, no extra materials.',
     ].join(' ')
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
