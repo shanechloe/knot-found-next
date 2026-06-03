@@ -11,6 +11,16 @@ type GenerateBody = {
   images?: string[]
 }
 
+type FallbackIdea = {
+  title: string
+  type: string
+  style: string
+  difficulty: 'Easy' | 'Medium' | 'Difficult'
+  time: string
+  materialsUsed: string
+  steps: string[]
+}
+
 const REQUEST_MIN_INTERVAL_MS = 30_000
 const recentGenerateRequests = new Map<string, number>()
 
@@ -38,6 +48,42 @@ function isRateLimited(clientId: string) {
   return false
 }
 
+function cleanText(value: unknown, fallback: string) {
+  if (typeof value !== 'string') return fallback
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : fallback
+}
+
+function normalizeDifficulty(value: unknown): FallbackIdea['difficulty'] {
+  if (value === 'Easy' || value === 'Medium' || value === 'Difficult') return value
+  return 'Medium'
+}
+
+function normalizeTypeLabel(type: string) {
+  const trimmed = type.trim()
+  return trimmed.toLowerCase() === 'surprise me' ? 'Jewelry Piece' : trimmed
+}
+
+function fallbackIdeas(input: Required<Pick<GenerateBody, 'materials' | 'style' | 'type' | 'purpose' | 'difficulty'>>): FallbackIdea[] {
+  const normalizedType = normalizeTypeLabel(input.type)
+  return [
+    {
+      title: `${input.style} ${normalizedType}`,
+      type: normalizedType,
+      style: input.style,
+      difficulty: normalizeDifficulty(input.difficulty),
+      time: '40 min',
+      materialsUsed: input.materials || 'mixed stash pieces',
+      steps: [
+        'Sort your focal pieces and supporting beads by size.',
+        'Build the base structure and secure the joins.',
+        'Layer the remaining beads for texture and balance.',
+        `Adjust the fit and finish for ${input.purpose.toLowerCase()}.`,
+      ],
+    },
+  ]
+}
+
 export async function POST(request: Request) {
   const clientId = getClientIdentifier(request)
   if (isRateLimited(clientId)) {
@@ -50,24 +96,30 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as GenerateBody
+  const normalized = {
+    materials: cleanText(body.materials, 'mixed beads and chain offcuts'),
+    style: cleanText(body.style, 'Boho'),
+    type: cleanText(body.type, 'Necklace'),
+    purpose: cleanText(body.purpose, 'Everyday wear'),
+    difficulty: cleanText(body.difficulty, 'Medium'),
+  }
 
   try {
     const result = await generateJewelryPipeline({
-      materials: body.materials,
-      style: body.style,
-      type: body.type,
-      purpose: body.purpose,
-      difficulty: body.difficulty,
+      materials: normalized.materials,
+      style: normalized.style,
+      type: normalized.type,
+      purpose: normalized.purpose,
+      difficulty: normalized.difficulty,
       images: Array.isArray(body.images) ? body.images.slice(0, 1).filter(Boolean) : [],
     })
 
     return NextResponse.json(result)
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Unknown generation error',
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({
+      ideas: fallbackIdeas(normalized),
+      source: 'fallback',
+      warning: error instanceof Error ? error.message : 'Unknown generation error',
+    })
   }
 }

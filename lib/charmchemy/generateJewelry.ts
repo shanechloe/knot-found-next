@@ -57,7 +57,7 @@ export type GenerateJewelryResult = {
   attempts?: GenerationAttempt[]
 }
 
-const DEFAULT_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'
+const DEFAULT_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'
 const DEFAULT_IMAGE_SIZE = process.env.OPENAI_IMAGE_SIZE || '1024x1024'
 const DEFAULT_IMAGE_QUALITY = process.env.OPENAI_IMAGE_QUALITY || 'low'
 export const MAX_IMAGE_REGEN_ATTEMPTS = Number(process.env.CHARMCHEMY_MAX_IMAGE_REGEN_ATTEMPTS || '3')
