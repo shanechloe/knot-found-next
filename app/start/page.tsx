@@ -19,6 +19,28 @@ type StoredStartInput = {
   previewImages?: Array<{ id: string; name: string; dataUrl: string }>
 }
 
+type StoredResult = {
+  ideas?: StoredResultIdea[]
+  style?: string
+  type?: string
+  purpose?: string
+  difficulty?: string
+  materials?: string
+  source?: string
+  warning?: string
+}
+
+type StoredResultIdea = {
+  title: string
+  type: string
+  style: string
+  difficulty: string
+  time: string
+  materialsUsed: string
+  steps: string[]
+  imageUrl?: string
+}
+
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
@@ -52,6 +74,20 @@ function resizeImageDataUrl(dataUrl: string, maxSide = 1024, quality = 0.72) {
     img.onerror = () => reject(new Error('Could not process image'))
     img.src = dataUrl
   })
+}
+
+function safeWriteStorage(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value)
+  } catch {
+    // Ignore session quota issues.
+  }
+
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Ignore local quota issues.
+  }
 }
 
 export default function StartCreatingPage() {
@@ -158,21 +194,29 @@ export default function StartCreatingPage() {
       const data = await response.json()
       if (!response.ok) throw new Error(data?.error || 'Generation failed.')
 
-      sessionStorage.setItem(
+      const firstIdeaImage = data?.ideas?.[0]?.imageUrl || data?.imageBase64 || ''
+      const resultPayload: StoredResult = {
+        ideas: Array.isArray(data.ideas)
+          ? data.ideas.map((idea: StoredResultIdea) => ({
+              ...idea,
+              imageUrl: idea.imageUrl || firstIdeaImage,
+            }))
+          : data.ideas,
+        style,
+        type,
+        purpose,
+        difficulty,
+        materials: materialsText,
+        source: data.source,
+        warning: data.warning ?? '',
+      }
+
+      safeWriteStorage(
         'charmchemy:lastResult',
-        JSON.stringify({
-          ideas: data.ideas,
-          style,
-          type,
-          purpose,
-          difficulty,
-          materials: materialsText,
-          source: data.source,
-          warning: data.warning ?? '',
-        }),
+        JSON.stringify(resultPayload),
       )
 
-      sessionStorage.setItem(
+      safeWriteStorage(
         'charmchemy:lastStartInput',
         JSON.stringify({
           materialsText,

@@ -57,7 +57,7 @@ export default function ResultsPage() {
   })
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('charmchemy:lastResult')
+    const raw = sessionStorage.getItem('charmchemy:lastResult') || localStorage.getItem('charmchemy:lastResult')
     if (!raw) return
 
     try {
