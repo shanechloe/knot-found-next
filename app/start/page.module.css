@@ -85,6 +85,9 @@
   border-color: var(--gold);
   background: rgba(201, 150, 58, 0.03);
 }
+.dragover {
+  box-shadow: 0 0 0 3px rgba(201, 150, 58, 0.12);
+}
 .upIcon {
   font-family: var(--font-display), Georgia, serif;
   font-size: 28px;
@@ -118,6 +121,31 @@
   font-size: 11px;
   color: var(--muted);
   margin-top: 14px;
+}
+.previewWrap {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.previewImg {
+  width: min(100%, 320px);
+  max-height: 240px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(168, 200, 206, 0.35);
+  object-fit: cover;
+  background: #f6efe5;
+  box-shadow: 0 8px 24px rgba(44, 74, 82, 0.08);
+}
+.previewRemove {
+  font-family: var(--font-ui), sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .thumbs {
   display: flex;
@@ -243,6 +271,11 @@
   color: var(--muted);
   margin-top: 12px;
   letter-spacing: 0.02em;
+}
+.errorMsg {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #9b3f2b;
 }
 .btnClear {
   background: none;

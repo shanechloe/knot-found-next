@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 
 /* ── Types ── */
@@ -16,6 +17,33 @@ interface Design {
   materials: string[]
   steps: Step[]
   featured?: boolean
+}
+
+type StoredInput = {
+  pieceType: string
+  surprise: boolean
+  vibes: string[]
+  occasion: string
+  difficulty: string
+  description: string
+  imageBase64: string | null
+}
+
+type GeneratedIdea = {
+  title: string
+  type: string
+  style: string
+  difficulty: 'Easy' | 'Medium' | 'Difficult'
+  time: string
+  materialsUsed: string
+  steps: string[]
+  imageUrl?: string
+}
+
+type StoredResult = {
+  ideas?: GeneratedIdea[]
+  warning?: string | null
+  source?: string
 }
 
 /* ── Data ── */
@@ -69,6 +97,23 @@ const DESIGNS: Design[] = [
 ]
 
 const REFINE_OPTIONS = ['More minimal', 'Make it harder', 'Use all materials', 'Gift-ready', 'Faster to make', 'More romantic']
+const LAST_INPUT_KEY = 'charmchemy:lastInput'
+const LAST_RESULT_KEY = 'charmchemy:lastResult'
+
+function safeReadStorage<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null
+  const raw = window.localStorage.getItem(key) || window.sessionStorage.getItem(key)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
+}
+
+function safeImageSrc(value?: string) {
+  return value && value.length > 0 ? value : null
+}
 
 /* ── Helpers ── */
 function typeClass(t: string) {
@@ -83,11 +128,15 @@ const ROMAN = ['I.', 'II.', 'III.', 'IV.', 'V.']
 
 /* ── Component ── */
 export default function ResultsPage() {
+  const router = useRouter()
   const [saved, setSaved] = useState<Set<string>>(new Set())
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeDesign, setActiveDesign] = useState<Design | null>(null)
   const [refineOpen, setRefineOpen] = useState(false)
   const [refineSelected, setRefineSelected] = useState<string[]>([])
+  const [generatedResult, setGeneratedResult] = useState<StoredResult | null>(null)
+  const [generatedInput, setGeneratedInput] = useState<StoredInput | null>(null)
+  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
 
   function toggleSave(id: string) {
     setSaved(prev => {
@@ -111,6 +160,251 @@ export default function ResultsPage() {
   function toggleRefineChip(chip: string) {
     setRefineSelected(prev =>
       prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip]
+    )
+  }
+
+  useEffect(() => {
+    setGeneratedResult(safeReadStorage<StoredResult>(LAST_RESULT_KEY))
+    setGeneratedInput(safeReadStorage<StoredInput>(LAST_INPUT_KEY))
+  }, [])
+
+  async function handleCopyText() {
+    const idea = generatedResult?.ideas?.[0]
+    if (!idea) return
+
+    const text = [
+      idea.title,
+      `Type: ${idea.type}`,
+      `Style: ${idea.style}`,
+      `Difficulty: ${idea.difficulty}`,
+      `Time: ${idea.time}`,
+      `Materials used: ${idea.materialsUsed}`,
+      'Steps:',
+      ...idea.steps.map((step, index) => `${index + 1}. ${step}`),
+    ].join('\n')
+
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopyState('copied')
+      window.setTimeout(() => setCopyState('idle'), 1200)
+    } catch {
+      setCopyState('idle')
+    }
+  }
+
+  function handleSaveImage() {
+    const imageSrc = safeImageSrc(generatedResult?.ideas?.[0]?.imageUrl)
+    if (!imageSrc) return
+
+    const link = document.createElement('a')
+    link.href = imageSrc
+    link.download = `${generatedResult?.ideas?.[0]?.title || 'charmchemy-result'}.png`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
+  function handleRegenerate() {
+    router.push('/start')
+  }
+
+  if (generatedResult?.ideas?.[0]) {
+    const idea = generatedResult.ideas[0]
+    const imageSrc = safeImageSrc(idea.imageUrl)
+    const inputSummary = generatedInput
+      ? `${generatedInput.vibes.join(', ') || generatedInput.pieceType} · ${generatedInput.occasion} · ${generatedInput.difficulty}`
+      : `${idea.style} · ${idea.type} · ${idea.difficulty}`
+
+    return (
+      <>
+        <nav style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 36px', height: '56px',
+          background: 'rgba(253,250,245,.92)', backdropFilter: 'blur(14px)',
+          borderBottom: '1px solid rgba(168,200,206,.2)',
+          position: 'sticky', top: 0, zIndex: 100,
+          boxShadow: '0 2px 8px rgba(44,74,82,.08)',
+        }}>
+          <Link href="/" style={{
+            fontFamily: 'var(--font-display), Georgia, serif',
+            fontSize: '20px', fontWeight: 400, color: 'var(--deep)', textDecoration: 'none',
+          }}>
+            Charm<em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>chemy</em>
+          </Link>
+          <button
+            type="button"
+            onClick={handleRegenerate}
+            style={{
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: '12px', fontWeight: 500,
+              background: 'var(--deep)', color: 'var(--surface)',
+              border: 'none', borderRadius: '999px', padding: '8px 18px',
+              cursor: 'pointer',
+            }}
+          >
+            Regenerate
+          </button>
+        </nav>
+
+        <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 36px 72px' }}>
+          <div style={{ maxWidth: 860 }}>
+            <div className={styles.eyebrow}>Your results</div>
+            <h1 style={{
+              margin: '10px 0 14px',
+              fontFamily: 'var(--font-display), Georgia, serif',
+              fontSize: 'clamp(2.4rem, 5vw, 4.25rem)',
+              lineHeight: 1.02,
+              color: 'var(--deep)',
+              fontStyle: 'italic',
+            }}>
+              Your jewelry ideas are ready.
+            </h1>
+            <p style={{ margin: 0, fontSize: '16px', color: 'var(--body)', lineHeight: 1.6 }}>
+              Here is 1 makeable design based on your materials.
+            </p>
+            <p style={{ margin: '14px 0 0', fontSize: '14px', color: 'var(--body)' }}>
+              Source: <strong>{generatedResult.source || 'OpenAI'}</strong>
+            </p>
+            <p style={{ margin: '12px 0 0', fontSize: '14px', color: 'var(--body)' }}>
+              Style: <strong>{idea.style}</strong> | Type: <strong>{idea.type}</strong> | Purpose: <strong>{generatedInput?.occasion || 'Everyday wear'}</strong> | Difficulty: <strong>{idea.difficulty}</strong>
+            </p>
+            <p style={{ margin: '12px 0 0', fontSize: '13px', color: 'var(--muted)' }}>
+              {inputSummary}
+            </p>
+          </div>
+
+          <section style={{
+            marginTop: 32,
+            display: 'grid',
+            gridTemplateColumns: 'minmax(280px, 420px) minmax(0, 1fr)',
+            gap: 24,
+            alignItems: 'start',
+          }}>
+            <article style={{
+              background: 'var(--surface)',
+              borderRadius: 18,
+              border: '1px solid rgba(168,200,206,.25)',
+              overflow: 'hidden',
+              boxShadow: '0 10px 30px rgba(44,74,82,.08)',
+            }}>
+              <div style={{
+                position: 'relative',
+                aspectRatio: '4 / 5',
+                background: 'linear-gradient(180deg, #F7F1E8 0%, #F0E6D6 100%)',
+                borderBottom: '1px solid rgba(168,200,206,.15)',
+              }}>
+                {imageSrc ? (
+                  <img
+                    src={imageSrc}
+                    alt={idea.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: 'var(--muted)' }}>
+                    No generated image
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: '18px 18px 16px' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 10,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  background: '#FDF4E3',
+                  color: '#6A4208',
+                  marginBottom: 10,
+                }}>
+                  Design 1
+                </div>
+                <h2 style={{
+                  margin: '0 0 10px',
+                  fontFamily: 'var(--font-display), Georgia, serif',
+                  fontSize: '28px',
+                  lineHeight: 1.1,
+                  color: 'var(--text)',
+                }}>
+                  {idea.title}
+                </h2>
+                <div style={{ display: 'grid', gap: 8, fontSize: 14, color: 'var(--body)', lineHeight: 1.6 }}>
+                  <div><strong>Type:</strong> {idea.type}</div>
+                  <div><strong>Style:</strong> {idea.style}</div>
+                  <div><strong>Difficulty:</strong> {idea.difficulty}</div>
+                  <div><strong>Time:</strong> {idea.time}</div>
+                  <div><strong>Materials used:</strong> {idea.materialsUsed}</div>
+                  <div>
+                    <strong>Steps:</strong>
+                    <ol style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+                      {idea.steps.map((step, index) => (
+                        <li key={index} style={{ marginBottom: 6 }}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                </div>
+                {generatedResult.warning ? (
+                  <p style={{ margin: '12px 0 0', color: '#8A6020', fontSize: 12 }}>
+                    {generatedResult.warning}
+                  </p>
+                ) : null}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+                  <button
+                    type="button"
+                    onClick={handleSaveImage}
+                    style={{
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 13,
+                      padding: '10px 16px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(168,200,206,.35)',
+                      background: 'var(--surface)',
+                      color: 'var(--deep)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Save image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyText}
+                    style={{
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 13,
+                      padding: '10px 16px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(168,200,206,.35)',
+                      background: 'var(--surface)',
+                      color: 'var(--deep)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {copyState === 'copied' ? 'Copied' : 'Copy text'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRegenerate}
+                    style={{
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 13,
+                      padding: '10px 16px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(44,74,82,.18)',
+                      background: 'var(--deep)',
+                      color: 'var(--surface)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              </div>
+            </article>
+          </section>
+        </main>
+      </>
     )
   }
 

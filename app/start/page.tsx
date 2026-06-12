@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
@@ -9,9 +9,53 @@ const PIECE_TYPES = ['Necklace', 'Bracelet', 'Earrings', 'Ring', 'Charm']
 const VIBES = ['Minimal', 'Romantic', 'Vintage', 'Boho', 'Fairycore', 'Elegant', 'Playful', 'Statement']
 const OCCASIONS = ['Everyday wear', 'Gift', 'Party', 'Wedding', 'Market / Selling', 'Upcycle project']
 const DIFFICULTIES = ['Easy', 'Medium', 'Difficult']
+const LAST_INPUT_KEY = 'charmchemy:lastInput'
+const LAST_RESULT_KEY = 'charmchemy:lastResult'
+
+type StoredInput = {
+  pieceType: string
+  surprise: boolean
+  vibes: string[]
+  occasion: string
+  difficulty: string
+  description: string
+  imageBase64: string | null
+}
+
+type ApiResult = {
+  ideas?: Array<{ imageUrl?: string }>
+}
+
+function safeReadStorage<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null
+  const raw = window.localStorage.getItem(key) || window.sessionStorage.getItem(key)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
+}
+
+function safeWriteStorage(key: string, value: unknown) {
+  if (typeof window === 'undefined') return
+  const raw = JSON.stringify(value)
+  window.localStorage.setItem(key, raw)
+  window.sessionStorage.setItem(key, raw)
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+    reader.onerror = () => reject(new Error('Could not read the uploaded image.'))
+    reader.readAsDataURL(file)
+  })
+}
 
 export default function StartPage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [pieceType, setPieceType] = useState<string>('Bracelet')
   const [surprise, setSurprise] = useState(false)
@@ -20,13 +64,79 @@ export default function StartPage() {
   const [difficulty, setDifficulty] = useState<string>('Medium')
   const [description, setDescription] = useState('')
   const [dragOver, setDragOver] = useState(false)
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const stored = safeReadStorage<StoredInput>(LAST_INPUT_KEY)
+    if (!stored) return
+    setPieceType(stored.pieceType || 'Bracelet')
+    setSurprise(Boolean(stored.surprise))
+    setVibes(Array.isArray(stored.vibes) ? stored.vibes : [])
+    setOccasion(stored.occasion || 'Everyday wear')
+    setDifficulty(stored.difficulty || 'Medium')
+    setDescription(stored.description || '')
+    setUploadedImage(stored.imageBase64 || null)
+  }, [])
 
   function toggleVibe(v: string) {
     setVibes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
   }
 
-  function handleGenerate() {
-    router.push('/results')
+  function openFilePicker() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleImageFiles(files: FileList | File[] | null | undefined) {
+    const file = files ? Array.from(files).find(item => item.type.startsWith('image/')) : null
+    if (!file) return
+    const dataUrl = await fileToDataUrl(file)
+    setUploadedImage(dataUrl)
+    setErrorMessage(null)
+  }
+
+  async function handleGenerate() {
+    setIsGenerating(true)
+    setErrorMessage(null)
+
+    try {
+      const input: StoredInput = {
+        pieceType,
+        surprise,
+        vibes,
+        occasion,
+        difficulty,
+        description,
+        imageBase64: uploadedImage,
+      }
+      safeWriteStorage(LAST_INPUT_KEY, input)
+
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          materials: description,
+          style: vibes.length > 0 ? vibes.join(', ') : (surprise ? 'Surprise Me' : pieceType),
+          type: surprise ? 'Surprise Me' : pieceType,
+          purpose: occasion,
+          difficulty,
+          images: uploadedImage ? [uploadedImage] : [],
+        }),
+      })
+
+      const payload = (await response.json()) as ApiResult & { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to generate jewelry ideas right now.')
+      }
+
+      safeWriteStorage(LAST_RESULT_KEY, payload)
+      router.push('/results')
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to generate jewelry ideas right now.')
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   function handleClear() {
@@ -36,6 +146,9 @@ export default function StartPage() {
     setOccasion('Everyday wear')
     setDifficulty('Medium')
     setDescription('')
+    setUploadedImage(null)
+    setErrorMessage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   return (
@@ -83,18 +196,62 @@ export default function StartPage() {
           <div className={styles.fq}>Upload your materials</div>
           <div
             className={`${styles.upzone} ${dragOver ? styles.dragover : ''}`}
+            onClick={openFilePicker}
             onDragOver={e => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={e => { e.preventDefault(); setDragOver(false) }}
+            onDrop={async e => {
+              e.preventDefault()
+              setDragOver(false)
+              await handleImageFiles(e.dataTransfer.files)
+            }}
           >
             <span className={styles.upIcon}>✦</span>
             <div className={styles.upMain}>Drag & drop, or tap to browse</div>
-            <button className={styles.upBtn} type="button">Upload photo</button>
-            <div className={styles.thumbs}>
-              <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EDE7D9,#C8BCA8)' }}>🪙</div>
-              <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EAF2F4,#B4D4DC)' }}>📿</div>
-              <div className={`${styles.thumb} ${styles.thumbAdd}`}>+</div>
-            </div>
+            <button
+              className={styles.upBtn}
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                openFilePicker()
+              }}
+            >
+              Upload photo
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={async e => {
+                await handleImageFiles(e.target.files)
+                e.currentTarget.value = ''
+              }}
+            />
+            {uploadedImage ? (
+              <div className={styles.previewWrap}>
+                <img
+                  src={uploadedImage}
+                  alt="Uploaded materials preview"
+                  className={styles.previewImg}
+                />
+                <button
+                  type="button"
+                  className={styles.previewRemove}
+                  onClick={e => {
+                    e.stopPropagation()
+                    setUploadedImage(null)
+                  }}
+                >
+                  Remove image
+                </button>
+              </div>
+            ) : (
+              <div className={styles.thumbs}>
+                <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EDE7D9,#C8BCA8)' }}>🪙</div>
+                <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EAF2F4,#B4D4DC)' }}>📿</div>
+                <div className={`${styles.thumb} ${styles.thumbAdd}`}>+</div>
+              </div>
+            )}
             <div className={styles.upHint}>Plain background · good lighting · lay flat</div>
           </div>
         </div>
@@ -190,13 +347,14 @@ export default function StartPage() {
 
         {/* Generate */}
         <div className={styles.genWrap}>
-          <button className={styles.btnGenerate} type="button" onClick={handleGenerate}>
-            Generate Ideas ✦
+          <button className={styles.btnGenerate} type="button" onClick={handleGenerate} disabled={isGenerating}>
+            {isGenerating ? 'Generating…' : 'Generate Ideas ✦'}
           </button>
           <div className={styles.genSub}>~15 seconds · your images stay private</div>
           <button className={styles.btnClear} type="button" onClick={handleClear}>
             Clear all
           </button>
+          {errorMessage ? <p className={styles.errorMsg}>{errorMessage}</p> : null}
         </div>
 
       </div>
