@@ -1,390 +1,225 @@
 'use client'
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import styles from './page.module.css'
 
-type PreviewImage = {
-  id: string
-  name: string
-  url: string
-  dataUrl: string
-}
+const PIECE_TYPES = ['Necklace', 'Bracelet', 'Earrings', 'Ring', 'Charm']
+const VIBES = ['Minimal', 'Romantic', 'Vintage', 'Boho', 'Fairycore', 'Elegant', 'Playful', 'Statement']
+const OCCASIONS = ['Everyday wear', 'Gift', 'Party', 'Wedding', 'Market / Selling', 'Upcycle project']
+const DIFFICULTIES = ['Easy', 'Medium', 'Difficult']
 
-type StoredStartInput = {
-  materialsText?: string
-  type?: string
-  style?: string
-  purpose?: string
-  difficulty?: string
-  previewImages?: Array<{ id: string; name: string; dataUrl: string }>
-}
-
-type StoredResult = {
-  ideas?: StoredResultIdea[]
-  style?: string
-  type?: string
-  purpose?: string
-  difficulty?: string
-  materials?: string
-  source?: string
-  warning?: string
-}
-
-type StoredResultIdea = {
-  title: string
-  type: string
-  style: string
-  difficulty: string
-  time: string
-  materialsUsed: string
-  steps: string[]
-  imageUrl?: string
-}
-
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('Could not read file'))
-    reader.readAsDataURL(file)
-  })
-}
-
-function resizeImageDataUrl(dataUrl: string, maxSide = 1024, quality = 0.72) {
-  return new Promise<string>((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      const { width, height } = img
-      const scale = Math.min(1, maxSide / Math.max(width, height))
-      const targetWidth = Math.max(1, Math.round(width * scale))
-      const targetHeight = Math.max(1, Math.round(height * scale))
-
-      const canvas = document.createElement('canvas')
-      canvas.width = targetWidth
-      canvas.height = targetHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        reject(new Error('Could not process image'))
-        return
-      }
-
-      ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
-      resolve(canvas.toDataURL('image/jpeg', quality))
-    }
-    img.onerror = () => reject(new Error('Could not process image'))
-    img.src = dataUrl
-  })
-}
-
-function safeWriteStorage(key: string, value: string) {
-  try {
-    sessionStorage.setItem(key, value)
-  } catch {
-    // Ignore session quota issues.
-  }
-
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // Ignore local quota issues.
-  }
-}
-
-export default function StartCreatingPage() {
+export default function StartPage() {
   const router = useRouter()
-  const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
-  const [materialsText, setMaterialsText] = useState('')
-  const [autoFillNote, setAutoFillNote] = useState('')
-  const [type, setType] = useState('Necklace')
-  const [style, setStyle] = useState('Boho')
-  const [purpose, setPurpose] = useState('Everyday wear')
-  const [difficulty, setDifficulty] = useState('Medium')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generateError, setGenerateError] = useState('')
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem('charmchemy:lastStartInput')
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw) as StoredStartInput
-      if (parsed.materialsText) setMaterialsText(parsed.materialsText)
-      if (parsed.type) setType(parsed.type)
-      if (parsed.style) setStyle(parsed.style)
-      if (parsed.purpose) setPurpose(parsed.purpose)
-      if (parsed.difficulty) setDifficulty(parsed.difficulty)
-      if (Array.isArray(parsed.previewImages) && parsed.previewImages.length > 0) {
-        setPreviewImages(
-          parsed.previewImages.map((image, idx) => ({
-            id: image.id || `${image.name}-${idx}`,
-            name: image.name || `image-${idx + 1}.png`,
-            dataUrl: image.dataUrl,
-            url: image.dataUrl,
-          })),
-        )
-      }
-    } catch {
-      // Ignore invalid cache.
-    }
-  }, [])
+  const [pieceType, setPieceType] = useState<string>('Bracelet')
+  const [surprise, setSurprise] = useState(false)
+  const [vibes, setVibes] = useState<string[]>(['Romantic', 'Boho'])
+  const [occasion, setOccasion] = useState<string>('Everyday wear')
+  const [difficulty, setDifficulty] = useState<string>('Medium')
+  const [description, setDescription] = useState('')
+  const [dragOver, setDragOver] = useState(false)
 
-  const previewCountText = useMemo(() => {
-    if (previewImages.length === 0) return 'No images selected yet.'
-    return '1 image selected.'
-  }, [previewImages.length])
-
-  const handleImageSelect = async (event: ChangeEvent<HTMLInputElement>) => {
-    const fileList = event.target.files
-    if (!fileList || fileList.length === 0) return
-
-    const nextImages: PreviewImage[] = await Promise.all(
-      Array.from(fileList).map(async (file) => {
-        const rawDataUrl = await fileToDataUrl(file)
-        const compressedDataUrl = await resizeImageDataUrl(rawDataUrl)
-
-        return {
-          id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
-          name: file.name,
-          url: compressedDataUrl,
-          dataUrl: compressedDataUrl,
-        }
-      }),
-    )
-
-    setPreviewImages(nextImages.slice(0, 1))
-    setAutoFillNote('')
-
-    event.target.value = ''
+  function toggleVibe(v: string) {
+    setVibes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
   }
 
-  const removeImage = (id: string) => {
-    setPreviewImages((current) => current.filter((img) => img.id !== id))
+  function handleGenerate() {
+    router.push('/results')
   }
 
-  const clearAll = () => {
-    setPreviewImages([])
-    setMaterialsText('')
-    setAutoFillNote('')
-    setType('Necklace')
-    setStyle('Boho')
-    setPurpose('Everyday wear')
+  function handleClear() {
+    setPieceType('Bracelet')
+    setSurprise(false)
+    setVibes([])
+    setOccasion('Everyday wear')
     setDifficulty('Medium')
-    setGenerateError('')
-  }
-
-  const handleGenerate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (isGenerating) return
-    setIsGenerating(true)
-    setGenerateError('')
-
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          materials: materialsText,
-          type,
-          style,
-          purpose,
-          difficulty,
-          images: previewImages.map((img) => img.dataUrl).slice(0, 1),
-        }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) throw new Error(data?.error || 'Generation failed.')
-
-      const firstIdeaImage = data?.ideas?.[0]?.imageUrl || data?.imageBase64 || ''
-      const resultPayload: StoredResult = {
-        ideas: Array.isArray(data.ideas)
-          ? data.ideas.map((idea: StoredResultIdea) => ({
-              ...idea,
-              imageUrl: idea.imageUrl || firstIdeaImage,
-            }))
-          : data.ideas,
-        style,
-        type,
-        purpose,
-        difficulty,
-        materials: materialsText,
-        source: data.source,
-        warning: data.warning ?? '',
-      }
-
-      safeWriteStorage(
-        'charmchemy:lastResult',
-        JSON.stringify(resultPayload),
-      )
-
-      safeWriteStorage(
-        'charmchemy:lastStartInput',
-        JSON.stringify({
-          materialsText,
-          type,
-          style,
-          purpose,
-          difficulty,
-          previewImages: previewImages.map((img) => ({
-            id: img.id,
-            name: img.name,
-            dataUrl: img.dataUrl,
-          })),
-        }),
-      )
-
-      router.push('/results?source=ai')
-    } catch (error) {
-      setGenerateError(error instanceof Error ? error.message : 'Could not generate ideas. Please try again.')
-    } finally {
-      setIsGenerating(false)
-    }
+    setDescription('')
   }
 
   return (
-    <div className="start-page-shell">
-      <nav className="top-nav">
-        <a className="brand" href="/">Charmchemy</a>
-        <div className="nav-links">
-          <a href="/">Home</a>
-          <a href="/#how-it-works">How It Works</a>
-          <a href="/#gallery">Gallery</a>
-        </div>
+    <>
+      {/* NAV */}
+      <nav style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 36px', height: '56px',
+        background: 'rgba(253,250,245,.92)', backdropFilter: 'blur(14px)',
+        borderBottom: '1px solid rgba(168,200,206,.2)',
+        position: 'sticky', top: 0, zIndex: 100,
+      }}>
+        <Link href="/" style={{
+          fontFamily: 'var(--font-display), Georgia, serif',
+          fontSize: '20px', fontWeight: 400, color: 'var(--deep)', textDecoration: 'none',
+        }}>
+          Charm<em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>chemy</em>
+        </Link>
+        <Link href="/" style={{
+          fontFamily: 'var(--font-ui), sans-serif',
+          fontSize: '12px', fontWeight: 500,
+          background: 'var(--deep)', color: 'var(--surface)',
+          border: 'none', borderRadius: '999px', padding: '8px 18px',
+          textDecoration: 'none', transition: 'background .2s',
+        }}>← Home</Link>
       </nav>
 
-      <main className="start-content">
-        <p className="progress-pill">Step 1 of 2: Upload materials and set your preferences</p>
+      <div className={styles.wrap}>
 
-        <section className="start-hero">
-          <span className="kicker">Start Creating</span>
-          <h1>Create your first AI jewelry design plan</h1>
-          <p>
-            Tell Charmchemy what materials you have and the style you want. We
-            will generate 1 makeable design direction.
-          </p>
-        </section>
+        {/* Step indicator */}
+        <div className={styles.stepsIndicator}>
+          <div className={`${styles.sdot} ${styles.done}`} />
+          <div className={`${styles.sdot} ${styles.active}`} />
+          <div className={styles.sdot} />
+          <span className={styles.slabel}>Step 1 of 2</span>
+        </div>
 
-        <form className="start-card" onSubmit={handleGenerate}>
-          <section className="upload-primary">
-          <h2>Upload your materials</h2>
-          <p className="start-help">
-            Add a photo of your beads, charms, chains, findings, or leftover supplies.
-          </p>
-          <label className="upload-box upload-box-large" htmlFor="material-images">
-            <span className="upload-title">Drag and drop a photo here</span>
-            <span className="upload-subtitle">or click the button below to upload</span>
-            <span className="upload-button">Upload photo</span>
-          </label>
-          <input
-            id="material-images"
-            className="file-input"
-            type="file"
-            accept="image/*"
-            onChange={handleImageSelect}
+        {/* Title */}
+        <div className={styles.title}>
+          Let&apos;s build something <em>beautiful.</em>
+        </div>
+
+        {/* Upload */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>Upload your materials</div>
+          <div
+            className={`${styles.upzone} ${dragOver ? styles.dragover : ''}`}
+            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { e.preventDefault(); setDragOver(false) }}
+          >
+            <span className={styles.upIcon}>✦</span>
+            <div className={styles.upMain}>Drag & drop, or tap to browse</div>
+            <button className={styles.upBtn} type="button">Upload photo</button>
+            <div className={styles.thumbs}>
+              <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EDE7D9,#C8BCA8)' }}>🪙</div>
+              <div className={styles.thumb} style={{ background: 'linear-gradient(135deg,#EAF2F4,#B4D4DC)' }}>📿</div>
+              <div className={`${styles.thumb} ${styles.thumbAdd}`}>+</div>
+            </div>
+            <div className={styles.upHint}>Plain background · good lighting · lay flat</div>
+          </div>
+        </div>
+
+        <div className={styles.divider} />
+
+        {/* Describe */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>
+            Describe your materials
+            <span className={styles.opt}>optional</span>
+          </div>
+          <textarea
+            className={styles.textarea}
+            placeholder="e.g. gold seed beads, 3 moon charms, copper wire, rose quartz…"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
           />
+        </div>
 
-          <p className="start-help">{previewCountText}</p>
-          {previewImages.length > 0 && (
-            <div className="preview-grid">
-              {previewImages.map((image) => (
-                <article key={image.id} className="preview-card">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image.url} alt={image.name} />
-                  <div className="preview-meta">
-                    <p>{image.name}</p>
-                    <button type="button" className="chip" onClick={() => removeImage(image.id)}>
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-          <p className="start-tip">Tip: Lay your materials on a plain background for better results.</p>
-          </section>
+        <div className={styles.divider} />
 
-          <section className="form-block">
-            <h2>
-              Describe more details <span className="optional-tag">Optional</span>
-            </h2>
-            <p className="start-help">
-              Tell us anything helpful, like colors, quantities, materials, or pieces you really want to use.
-            </p>
-            {autoFillNote && <p className="start-help">{autoFillNote}</p>}
-            <textarea
-              className="start-input"
-              rows={5}
-              name="materials"
-              value={materialsText}
-              onChange={(event) => setMaterialsText(event.target.value)}
-              placeholder="For example: I have 6 pearl beads, some gold wire, and I want something simple for everyday wear."
-            />
-          </section>
-
-          <div className="form-grid form-grid-single form-block">
-            <div>
-              <h2>What would you like to make?</h2>
-              <p className="start-help">Not sure? Choose Surprise Me and let Charmchemy decide.</p>
-              <select className="start-input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
-                <option>Necklace</option>
-                <option>Bracelet</option>
-                <option>Earrings</option>
-                <option>Ring</option>
-                <option>Charm</option>
-                <option>Surprise Me</option>
-              </select>
-            </div>
+        {/* Piece type */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>What would you like to make?</div>
+          <div className={styles.chips}>
+            {PIECE_TYPES.map(pt => (
+              <button
+                key={pt}
+                type="button"
+                className={`${styles.chip} ${!surprise && pieceType === pt ? styles.selected : ''}`}
+                onClick={() => { setPieceType(pt); setSurprise(false) }}
+              >{pt}</button>
+            ))}
+            <button
+              type="button"
+              className={`${styles.chip} ${surprise ? styles.selectedGold : ''}`}
+              onClick={() => setSurprise(s => !s)}
+            >✦ Surprise Me</button>
           </div>
+        </div>
 
-          <div className="form-grid form-grid-single form-block">
-            <div>
-              <h2>Choose a vibe</h2>
-              <select className="start-input" name="style" value={style} onChange={(e) => setStyle(e.target.value)}>
-                <option>Minimal</option>
-                <option>Romantic</option>
-                <option>Vintage</option>
-                <option>Boho</option>
-                <option>Fairycore</option>
-                <option>Elegant</option>
-                <option>Playful</option>
-                <option>Statement</option>
-              </select>
-            </div>
-          </div>
+        <div className={styles.divider} />
 
-          <div className="form-grid form-grid-single form-block">
-            <div>
-              <h2>What is it for?</h2>
-              <select className="start-input" name="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
-                <option>Everyday wear</option>
-                <option>Gift</option>
-                <option>Party</option>
-                <option>Wedding</option>
-                <option>Market / Selling</option>
-                <option>Upcycle project</option>
-              </select>
-            </div>
+        {/* Vibe */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>Choose a vibe</div>
+          <div className={styles.chips}>
+            {VIBES.map(v => (
+              <button
+                key={v}
+                type="button"
+                className={`${styles.chip} ${vibes.includes(v) ? styles.selected : ''}`}
+                onClick={() => toggleVibe(v)}
+              >{v}</button>
+            ))}
           </div>
+        </div>
 
-          <div className="form-grid form-grid-single form-block">
-            <div>
-              <h2>Choose difficulty</h2>
-              <select className="start-input" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                <option>Easy</option>
-                <option>Medium</option>
-                <option>Difficult</option>
-              </select>
-            </div>
-          </div>
+        <div className={styles.divider} />
 
-          <div className="action-row">
-            <button className="cta cta-button" type="submit" disabled={isGenerating}>
-              {isGenerating ? 'Generating Ideas...' : 'Generate Ideas'}
-            </button>
-            <button className="lang-btn cta-button" type="button" onClick={clearAll}>Clear All</button>
+        {/* Occasion */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>What is it for?</div>
+          <div className={styles.chips}>
+            {OCCASIONS.map(oc => (
+              <button
+                key={oc}
+                type="button"
+                className={`${styles.chip} ${occasion === oc ? styles.selected : ''}`}
+                onClick={() => setOccasion(oc)}
+              >{oc}</button>
+            ))}
           </div>
-          {generateError && <p className="start-help error-text">{generateError}</p>}
-        </form>
-      </main>
-    </div>
+        </div>
+
+        <div className={styles.divider} />
+
+        {/* Difficulty */}
+        <div className={styles.fg}>
+          <div className={styles.fq}>Difficulty</div>
+          <div className={styles.seg}>
+            {DIFFICULTIES.map(d => (
+              <button
+                key={d}
+                type="button"
+                className={`${styles.segBtn} ${difficulty === d ? styles.active : ''}`}
+                onClick={() => setDifficulty(d)}
+              >{d}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Generate */}
+        <div className={styles.genWrap}>
+          <button className={styles.btnGenerate} type="button" onClick={handleGenerate}>
+            Generate Ideas ✦
+          </button>
+          <div className={styles.genSub}>~15 seconds · your images stay private</div>
+          <button className={styles.btnClear} type="button" onClick={handleClear}>
+            Clear all
+          </button>
+        </div>
+
+      </div>
+
+      {/* FOOTER */}
+      <footer style={{
+        background: 'var(--dark)', padding: '24px 36px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderTop: '1px solid rgba(168,200,206,.08)',
+      }}>
+        <div>
+          <Link href="/" style={{
+            fontFamily: 'var(--font-display), Georgia, serif',
+            fontSize: '17px', fontWeight: 300, color: 'rgba(253,250,245,.45)', textDecoration: 'none',
+          }}>
+            Charm<em style={{ fontStyle: 'italic', color: 'rgba(201,150,58,.55)' }}>chemy</em>
+          </Link>
+          <p style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)', marginTop: '2px' }}>
+            Made from maybe. Designed by AI. Crafted by you.
+          </p>
+        </div>
+        <span style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)' }}>© 2025 Charmchemy</span>
+      </footer>
+    </>
   )
 }
