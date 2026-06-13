@@ -26,6 +26,11 @@ type ApiResult = {
   ideas?: Array<{ imageUrl?: string }>
 }
 
+type WindowWithCharmchemy = Window & {
+  __charmchemyLastInput?: StoredInput
+  __charmchemyLastResult?: ApiResult
+}
+
 function safeReadStorage<T>(key: string): T | null {
   if (typeof window === 'undefined') return null
   const raw = window.localStorage.getItem(key) || window.sessionStorage.getItem(key)
@@ -42,6 +47,18 @@ function safeWriteStorage(key: string, value: unknown) {
   const raw = JSON.stringify(value)
   window.localStorage.setItem(key, raw)
   window.sessionStorage.setItem(key, raw)
+}
+
+function safeWriteSmallStorage(key: string, value: unknown) {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = JSON.stringify(value)
+    if (raw.length > 200_000) return
+    window.localStorage.setItem(key, raw)
+    window.sessionStorage.setItem(key, raw)
+  } catch {
+    // Ignore storage quota errors. The live result stays available in memory.
+  }
 }
 
 function fileToDataUrl(file: File) {
@@ -69,7 +86,8 @@ export default function StartPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    const stored = safeReadStorage<StoredInput>(LAST_INPUT_KEY)
+    const win = window as WindowWithCharmchemy
+    const stored = win.__charmchemyLastInput || safeReadStorage<StoredInput>(LAST_INPUT_KEY)
     if (!stored) return
     setPieceType(stored.pieceType || 'Bracelet')
     setSurprise(Boolean(stored.surprise))
@@ -110,7 +128,16 @@ export default function StartPage() {
         description,
         imageBase64: uploadedImage,
       }
-      safeWriteStorage(LAST_INPUT_KEY, input)
+      ;(window as WindowWithCharmchemy).__charmchemyLastInput = input
+      safeWriteSmallStorage(LAST_INPUT_KEY, {
+        pieceType,
+        surprise,
+        vibes,
+        occasion,
+        difficulty,
+        description,
+        imageBase64: null,
+      })
 
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -130,7 +157,13 @@ export default function StartPage() {
         throw new Error(payload.error || 'Unable to generate jewelry ideas right now.')
       }
 
-      safeWriteStorage(LAST_RESULT_KEY, payload)
+      ;(window as WindowWithCharmchemy).__charmchemyLastResult = payload
+      safeWriteSmallStorage(LAST_RESULT_KEY, {
+        ideas: payload.ideas?.map(idea => ({
+          ...idea,
+          imageUrl: null,
+        })),
+      })
       router.push('/results')
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to generate jewelry ideas right now.')

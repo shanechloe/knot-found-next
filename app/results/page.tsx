@@ -46,6 +46,11 @@ type StoredResult = {
   source?: string
 }
 
+type WindowWithCharmchemy = Window & {
+  __charmchemyLastInput?: StoredInput
+  __charmchemyLastResult?: StoredResult
+}
+
 /* ── Data ── */
 const DESIGNS: Design[] = [
   {
@@ -164,8 +169,9 @@ export default function ResultsPage() {
   }
 
   useEffect(() => {
-    setGeneratedResult(safeReadStorage<StoredResult>(LAST_RESULT_KEY))
-    setGeneratedInput(safeReadStorage<StoredInput>(LAST_INPUT_KEY))
+    const win = window as WindowWithCharmchemy
+    setGeneratedResult(win.__charmchemyLastResult || safeReadStorage<StoredResult>(LAST_RESULT_KEY))
+    setGeneratedInput(win.__charmchemyLastInput || safeReadStorage<StoredInput>(LAST_INPUT_KEY))
   }, [])
 
   async function handleCopyText() {
