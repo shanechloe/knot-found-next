@@ -5,19 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 
-const PIECE_TYPES = ['Earrings', 'Bracelet', 'Necklace', 'Ring', 'Charm', 'Surprise Me'] as const
-const STYLES = ['Minimal', 'Romantic', 'Vintage', 'Boho', 'Fairycore', 'Elegant', 'Playful', 'Statement'] as const
-const PURPOSES = ['Everyday wear', 'Gift', 'Party', 'Wedding', 'Market / Selling', 'Upcycle project'] as const
-const DIFFICULTIES = ['Easy', 'Medium', 'Difficult'] as const
+const PIECE_TYPES = ['Earrings', 'Bracelet', 'Necklace', 'Ring', 'Charm', 'Surprise Me']
+const STYLES = ['Minimal', 'Romantic', 'Vintage', 'Boho', 'Fairycore', 'Elegant', 'Playful', 'Statement']
+const PURPOSES = ['Everyday wear', 'Gift', 'Party', 'Wedding', 'Market / Selling', 'Upcycle project']
+const DIFFICULTIES = ['Easy', 'Medium', 'Difficult']
 
 const LAST_INPUT_KEY = 'charmchemy:lastInput'
-const LAST_RESULT_KEY = 'charmchemy:lastResult'
 
 type StoredInput = {
   pieceType: string
   surprise: boolean
-  styles?: string[]
-  style?: string
+  styles: string[]
   purpose: string
   difficulty: string
   description: string
@@ -44,21 +42,11 @@ function safeWriteSmallStorage(key: string, value: unknown) {
   if (typeof window === 'undefined') return
   try {
     const raw = JSON.stringify(value)
-    if (raw.length > 250_000) return
+    if (raw.length > 200_000) return
     window.localStorage.setItem(key, raw)
     window.sessionStorage.setItem(key, raw)
   } catch {
-    // Ignore storage quota errors. The live data still stays in memory.
-  }
-}
-
-function safeRemoveStorage(key: string) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.removeItem(key)
-    window.sessionStorage.removeItem(key)
-  } catch {
-    // Ignore storage errors.
+    // Ignore storage quota errors. The live data stays in memory.
   }
 }
 
@@ -71,19 +59,15 @@ function fileToDataUrl(file: File) {
   })
 }
 
-function getSelectedStyle(stored: StoredInput | null) {
-  return stored?.style || stored?.styles?.[0] || 'Boho'
-}
-
 export default function StartPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const [pieceType, setPieceType] = useState<(typeof PIECE_TYPES)[number]>('Bracelet')
+  const [pieceType, setPieceType] = useState('Bracelet')
   const [surprise, setSurprise] = useState(false)
-  const [style, setStyle] = useState<(typeof STYLES)[number]>('Boho')
-  const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]>('Everyday wear')
-  const [difficulty, setDifficulty] = useState<(typeof DIFFICULTIES)[number]>('Medium')
+  const [stylesSelected, setStylesSelected] = useState<string[]>(['Romantic', 'Boho'])
+  const [purpose, setPurpose] = useState('Everyday wear')
+  const [difficulty, setDifficulty] = useState('Medium')
   const [description, setDescription] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
@@ -96,14 +80,20 @@ export default function StartPage() {
     const stored = win.__charmchemyLastInput || safeReadStorage<StoredInput>(LAST_INPUT_KEY)
     if (!stored) return
 
-    setPieceType((stored.pieceType as (typeof PIECE_TYPES)[number]) || 'Bracelet')
+    setPieceType(stored.pieceType || 'Bracelet')
     setSurprise(Boolean(stored.surprise))
-    setStyle(getSelectedStyle(stored) as (typeof STYLES)[number])
-    setPurpose((stored.purpose as (typeof PURPOSES)[number]) || 'Everyday wear')
-    setDifficulty((stored.difficulty as (typeof DIFFICULTIES)[number]) || 'Medium')
+    setStylesSelected(Array.isArray(stored.styles) ? stored.styles : [])
+    setPurpose(stored.purpose || 'Everyday wear')
+    setDifficulty(stored.difficulty || 'Medium')
     setDescription(stored.description || '')
     setUploadedImage(stored.imageBase64 || null)
   }, [])
+
+  function toggleStyle(style: string) {
+    setStylesSelected(prev => (
+      prev.includes(style) ? prev.filter(item => item !== style) : [...prev, style]
+    ))
+  }
 
   function openFilePicker() {
     fileInputRef.current?.click()
@@ -122,19 +112,13 @@ export default function StartPage() {
   function handleClear() {
     setPieceType('Bracelet')
     setSurprise(false)
-    setStyle('Boho')
+    setStylesSelected([])
     setPurpose('Everyday wear')
     setDifficulty('Medium')
     setDescription('')
     setUploadedImage(null)
     setUploadedFileName(null)
     setErrorMessage(null)
-
-    safeRemoveStorage(LAST_INPUT_KEY)
-    safeRemoveStorage(LAST_RESULT_KEY)
-    const win = window as WindowWithCharmchemy
-    win.__charmchemyLastInput = undefined
-    win.__charmchemyLastResult = undefined
 
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -147,15 +131,14 @@ export default function StartPage() {
       const input: StoredInput = {
         pieceType,
         surprise,
-        style,
+        styles: stylesSelected,
         purpose,
         difficulty,
         description,
         imageBase64: uploadedImage,
       }
 
-      const win = window as WindowWithCharmchemy
-      win.__charmchemyLastInput = input
+      ;(window as WindowWithCharmchemy).__charmchemyLastInput = input
       safeWriteSmallStorage(LAST_INPUT_KEY, {
         ...input,
         imageBase64: null,
@@ -166,7 +149,7 @@ export default function StartPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           materials: description,
-          style,
+          style: stylesSelected.length > 0 ? stylesSelected.join(', ') : (surprise ? 'Surprise Me' : pieceType),
           type: surprise ? 'Surprise Me' : pieceType,
           purpose,
           difficulty,
@@ -179,12 +162,7 @@ export default function StartPage() {
         throw new Error(payload.error || 'Unable to generate jewelry ideas right now.')
       }
 
-      win.__charmchemyLastResult = payload
-      safeWriteSmallStorage(LAST_RESULT_KEY, {
-        ...payload,
-        imageBase64: null,
-      })
-
+      ;(window as WindowWithCharmchemy).__charmchemyLastResult = payload
       router.push('/results')
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to generate jewelry ideas right now.')
@@ -193,58 +171,72 @@ export default function StartPage() {
     }
   }
 
-  const activeType = surprise ? 'Surprise Me' : pieceType
   const hasUploadedImage = Boolean(uploadedImage)
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand}>
+      <header className={styles.navWrap}>
+        <nav className={styles.nav}>
+          <Link href="/" className={styles.logo}>
             Charm<em>chemy</em>
           </Link>
-
-          <div className={styles.progress} aria-label="Workflow progress">
-            <div className={`${styles.progressStep} ${styles.progressStepActive}`}>
-              <span className={styles.progressCircle}>1</span>
-              <span>Materials &amp; style</span>
-            </div>
-            <span className={styles.progressLine} />
-            <div className={styles.progressStep}>
-              <span className={styles.progressCircle}>2</span>
-              <span>Your designs</span>
-            </div>
+          <div className={styles.navLinks}>
+            <Link href="/">Home</Link>
+            <Link href="/results">Results</Link>
           </div>
-        </div>
+          <Link href="/" className={styles.navCta}>
+            ← Home
+          </Link>
+        </nav>
       </header>
 
       <main className={styles.shell}>
         <section className={styles.hero}>
-          <div>
-            <div className={styles.kicker}>Start creating</div>
-            <h1 className={styles.title}>Create your AI jewelry design plan</h1>
-            <p className={styles.subtitle}>
-              Tell Charmchemy what you have and the style you want. We&apos;ll generate 3 makeable
-              design directions.
+          <div className={styles.heroCopy}>
+            <div className={styles.kicker}>
+              <span />
+              Start creating
+            </div>
+            <h1>Upload your materials and get makeable jewelry ideas.</h1>
+            <p>
+              Show us your beads, charms, chains, findings, or leftover supplies. Charmchemy
+              turns them into practical designs you can actually make.
             </p>
+            <div className={styles.heroMeta}>
+              <span>~15 seconds</span>
+              <span>your images stay private</span>
+              <span>no account needed</span>
+            </div>
+          </div>
+
+          <div className={styles.heroCard}>
+            <div className={styles.heroCardEyebrow}>Your workflow</div>
+            <div className={styles.heroCardTitle}>Photo first, then optional notes.</div>
+            <ul className={styles.heroCardList}>
+              <li>Upload one clear photo of your stash</li>
+              <li>Describe materials only if you want to</li>
+              <li>Choose type, style, purpose, and difficulty</li>
+              <li>Generate one result you can save or copy</li>
+            </ul>
           </div>
         </section>
 
-        <section className={styles.layout}>
-          <div className={styles.leftColumn}>
-            <section className={styles.card}>
-              <div className={styles.cardHead}>
+        <section className={styles.formLayout}>
+          <div className={styles.primaryColumn}>
+            <section className={styles.panel}>
+              <div className={styles.panelHead}>
                 <div>
-                  <div className={styles.sectionKicker}>Upload your materials</div>
+                  <div className={styles.sectionLabel}>Upload Photos</div>
                   <h2>Upload your materials</h2>
                 </div>
+                <div className={styles.panelHint}>Primary step</div>
               </div>
               <p className={styles.helperText}>
-                Add photos of your beads, charms, chains, findings, or leftover supplies.
+                Add a photo of your beads, charms, chains, findings, or leftover supplies.
               </p>
 
               <div
-                className={`${styles.uploadArea} ${dragOver ? styles.uploadAreaActive : ''}`}
+                className={`${styles.uploadZone} ${dragOver ? styles.uploadActive : ''}`}
                 onClick={openFilePicker}
                 onDragOver={e => {
                   e.preventDefault()
@@ -257,18 +249,42 @@ export default function StartPage() {
                   await handleImageFiles(e.dataTransfer.files)
                 }}
               >
+                <div className={styles.uploadMark}>✦</div>
+                <div className={styles.uploadTitle}>Drag and drop a single photo here</div>
+                <p className={styles.uploadCopy}>Or click the button below to browse your device.</p>
+                <button
+                  className={styles.uploadButton}
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation()
+                    openFilePicker()
+                  }}
+                >
+                  Upload photo
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={async e => {
+                    await handleImageFiles(e.target.files)
+                    e.currentTarget.value = ''
+                  }}
+                />
+
                 {hasUploadedImage ? (
-                  <div className={styles.previewWrap}>
+                  <div className={styles.previewBlock}>
                     <img
                       src={uploadedImage || ''}
                       alt="Uploaded materials preview"
                       className={styles.previewImage}
                     />
-                    <div className={styles.previewBar}>
+                    <div className={styles.previewMeta}>
                       <span>{uploadedFileName || 'Uploaded image'}</span>
                       <button
                         type="button"
-                        className={styles.removeButton}
+                        className={styles.previewRemove}
                         onClick={e => {
                           e.stopPropagation()
                           setUploadedImage(null)
@@ -280,40 +296,15 @@ export default function StartPage() {
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <div className={styles.uploadIcon}>✦</div>
-                    <div className={styles.uploadTitle}>Drag and drop a single photo here</div>
-                    <p className={styles.uploadCopy}>Or click the button below to browse your device.</p>
-                    <button
-                      className={styles.uploadButton}
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation()
-                        openFilePicker()
-                      }}
-                    >
-                      Upload photo
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={async e => {
-                        await handleImageFiles(e.target.files)
-                        e.currentTarget.value = ''
-                      }}
-                    />
-                    <div className={styles.tip}>Tip: lay your materials on a plain background.</div>
-                  </>
+                  <div className={styles.uploadTip}>Tip: lay your materials on a plain background.</div>
                 )}
               </div>
             </section>
 
-            <section className={styles.card}>
-              <div className={styles.cardHead}>
+            <section className={styles.panel}>
+              <div className={styles.panelHead}>
                 <div>
-                  <div className={styles.sectionKicker}>Describe More Details</div>
+                  <div className={styles.sectionLabel}>Describe More Details</div>
                   <h2>
                     Describe more details <span className={styles.optional}>Optional</span>
                   </h2>
@@ -332,9 +323,9 @@ export default function StartPage() {
             </section>
           </div>
 
-          <div className={styles.rightColumn}>
-            <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Jewelry Type</div>
+          <aside className={styles.sideColumn}>
+            <section className={styles.panel}>
+              <div className={styles.sectionLabel}>Choose Jewelry Type</div>
               <h2>What would you like to make?</h2>
               <p className={styles.helperText}>Not sure? Choose Surprise Me and let Charmchemy decide.</p>
               <div className={styles.chipGrid}>
@@ -361,25 +352,25 @@ export default function StartPage() {
               </div>
             </section>
 
-            <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Style</div>
+            <section className={styles.panel}>
+              <div className={styles.sectionLabel}>Choose Style</div>
               <h2>Choose a vibe</h2>
               <div className={styles.chipGrid}>
-                {STYLES.map(item => (
+                {STYLES.map(style => (
                   <button
-                    key={item}
+                    key={style}
                     type="button"
-                    className={`${styles.chip} ${style === item ? styles.chipActive : ''}`}
-                    onClick={() => setStyle(item)}
+                    className={`${styles.chip} ${stylesSelected.includes(style) ? styles.chipActive : ''}`}
+                    onClick={() => toggleStyle(style)}
                   >
-                    {item}
+                    {style}
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Purpose</div>
+            <section className={styles.panel}>
+              <div className={styles.sectionLabel}>Choose Purpose</div>
               <h2>What is it for?</h2>
               <div className={styles.chipGrid}>
                 {PURPOSES.map(item => (
@@ -395,10 +386,10 @@ export default function StartPage() {
               </div>
             </section>
 
-            <section className={styles.card}>
-              <div className={styles.sectionKicker}>Difficulty</div>
-              <h2>How hard should it be?</h2>
-              <div className={styles.segmented} role="tablist" aria-label="Difficulty">
+            <section className={styles.panel}>
+              <div className={styles.sectionLabel}>Difficulty</div>
+              <h2>Choose a difficulty</h2>
+              <div className={styles.segmented}>
                 {DIFFICULTIES.map(item => (
                   <button
                     key={item}
@@ -412,35 +403,35 @@ export default function StartPage() {
               </div>
             </section>
 
-            <section className={`${styles.card} ${styles.actionsCard}`}>
-              <button
-                className={styles.generateButton}
-                type="button"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-              >
-                Generate Ideas ✦
+            <section className={styles.actionPanel}>
+              <button className={styles.generateButton} type="button" onClick={handleGenerate} disabled={isGenerating}>
+                {isGenerating ? 'Generating…' : 'Generate Ideas ✦'}
               </button>
-              <div className={styles.generateMeta}>~15 seconds · your images stay private</div>
-              <button type="button" className={styles.clearButton} onClick={handleClear}>
+              <p className={styles.generateMeta}>~15 seconds · your images stay private</p>
+              <button className={styles.clearButton} type="button" onClick={handleClear}>
                 Clear all
               </button>
               {errorMessage ? <p className={styles.errorMessage}>{errorMessage}</p> : null}
             </section>
-          </div>
+          </aside>
         </section>
-
-        {isGenerating ? (
-          <div className={styles.loadingOverlay} role="status" aria-live="polite">
-            <div className={styles.loadingCard}>
-              <div className={styles.loadingSpinner} />
-              <div className={styles.loadingGlow}>✦</div>
-              <h2>Mixing your materials…</h2>
-              <p>Reading colors, counting beads, and sketching 3 makeable directions.</p>
-            </div>
-          </div>
-        ) : null}
       </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <div>
+            <Link href="/" className={styles.footerLogo}>
+              Charm<em>chemy</em>
+            </Link>
+            <p>Made from maybe. Designed by AI. Crafted by you.</p>
+          </div>
+          <div className={styles.footerLinks}>
+            <Link href="/">Home</Link>
+            <Link href="/results">Results</Link>
+          </div>
+        </div>
+        <div className={styles.footerBottom}>© 2025 Charmchemy</div>
+      </footer>
     </div>
   )
 }

@@ -18,48 +18,10 @@ type GeneratedIdea = {
   imageUrl?: string
 }
 
-type InventoryItem = {
-  componentName: string
-  color: string
-  shape: string
-  transparency: string
-  finish: string
-  approximateSize: string
-  quantityVisible: string
-  visualNotes: string
-}
-
-type DesignPlan = {
-  designSummary: string
-  materialsUsed: string[]
-  materialsNotUsed: string[]
-  layoutDescription: string
-  riskCheck?: {
-    usesOnlyApprovedInventory: boolean
-    addsNewMaterials: boolean
-    notes: string
-  }
-}
-
-type ReviewIssue = {
-  issue: string
-  evidence: string
-  severity: 'low' | 'medium' | 'high'
-}
-
-type ReviewResult = {
-  passed: boolean
-  violations: ReviewIssue[]
-  missingOrAlteredMaterials: string[]
-  addedMaterials: string[]
-  recommendation: 'accept' | 'regenerate'
-}
-
 type StoredInput = {
   pieceType: string
   surprise: boolean
-  styles?: string[]
-  style?: string
+  styles: string[]
   purpose: string
   difficulty: string
   description: string
@@ -70,22 +32,6 @@ type StoredResult = {
   ideas?: GeneratedIdea[]
   warning?: string | null
   source?: string
-  imageBase64?: string | null
-  inventory?: {
-    approvedInventory?: InventoryItem[]
-    forbiddenInventory?: string[]
-    uncertainItems?: string[]
-  }
-  designPlan?: DesignPlan
-  review?: ReviewResult
-  attempts?: Array<{
-    attempt: number
-    imageModel: string
-    imageSize: string
-    imageQuality: string
-    review: ReviewResult
-    violations: string[]
-  }>
 }
 
 type WindowWithCharmchemy = Window & {
@@ -107,86 +53,8 @@ function safeReadStorage<T>(key: string): T | null {
   }
 }
 
-function safeImageSrc(value?: string | null) {
+function safeImageSrc(value?: string) {
   return value && value.length > 0 ? value : null
-}
-
-function splitMaterials(value?: string) {
-  if (!value) return []
-  return value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean)
-}
-
-function difficultyDots(value: GeneratedIdea['difficulty']) {
-  if (value === 'Easy') return [true, false, false]
-  if (value === 'Medium') return [true, true, false]
-  return [true, true, true]
-}
-
-function buildSummaryText(idea: GeneratedIdea, input: StoredInput | null) {
-  const notes = input?.description?.trim() || ''
-  return [
-    idea.title,
-    `Type: ${idea.type}`,
-    `Style: ${idea.style}`,
-    `Difficulty: ${idea.difficulty}`,
-    `Time: ${idea.time}`,
-    `Materials used: ${idea.materialsUsed}`,
-    notes ? `User notes: ${notes}` : null,
-    'Steps:',
-    ...idea.steps.map((step, index) => `${index + 1}. ${step}`),
-  ]
-    .filter(Boolean)
-    .join('\n')
-}
-
-function titleFromParts(type: string, style: string, suffix?: string) {
-  const base = `${style} ${type}`.trim()
-  return suffix ? `${base} ${suffix}` : base
-}
-
-function buildCards(idea: GeneratedIdea, input: StoredInput | null) {
-  const materials = splitMaterials(idea.materialsUsed)
-  const mainImage = safeImageSrc(idea.imageUrl) || safeImageSrc(input?.imageBase64) || null
-  const cardBase = {
-    type: idea.type,
-    style: idea.style,
-    difficulty: idea.difficulty,
-    time: idea.time,
-    materialsUsed: idea.materialsUsed,
-    steps: idea.steps,
-    imageUrl: mainImage || undefined,
-    materials,
-  }
-
-  return [
-    {
-      tag: 'Design 1',
-      badge: 'Best match',
-      title: idea.title,
-      description: 'A balanced interpretation that keeps the visible materials front and center.',
-      accent: 'light',
-      ...cardBase,
-    },
-    {
-      tag: 'Design 2',
-      badge: 'Wearable edit',
-      title: titleFromParts(idea.type, idea.style, 'Study'),
-      description: 'A slightly fuller layout that keeps the same inventory but shifts the rhythm.',
-      accent: 'dark',
-      ...cardBase,
-    },
-    {
-      tag: 'Design 3',
-      badge: 'Quick make',
-      title: titleFromParts(idea.type, idea.style, 'Remix'),
-      description: 'A simplified finish with the same materials arranged into a quicker build.',
-      accent: 'neutral',
-      ...cardBase,
-    },
-  ]
 }
 
 export default function ResultsPage() {
@@ -194,7 +62,6 @@ export default function ResultsPage() {
   const [generatedResult, setGeneratedResult] = useState<StoredResult | null>(null)
   const [generatedInput, setGeneratedInput] = useState<StoredInput | null>(null)
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   useEffect(() => {
     const win = window as WindowWithCharmchemy
@@ -204,35 +71,24 @@ export default function ResultsPage() {
 
   const idea = generatedResult?.ideas?.[0]
 
-  const cards = useMemo(() => {
-    if (!idea) return []
-    return buildCards(idea, generatedInput)
-  }, [generatedInput, idea])
-
-  const selectedCard = openIndex != null ? cards[openIndex] : null
-
   const summaryText = useMemo(() => {
     if (!idea) return ''
-    return buildSummaryText(idea, generatedInput)
-  }, [generatedInput, idea])
+    return [
+      idea.title,
+      `Type: ${idea.type}`,
+      `Style: ${idea.style}`,
+      `Difficulty: ${idea.difficulty}`,
+      `Time: ${idea.time}`,
+      `Materials used: ${idea.materialsUsed}`,
+      'Steps:',
+      ...idea.steps.map((step, index) => `${index + 1}. ${step}`),
+    ].join('\n')
+  }, [idea])
 
-  const summaryLine = useMemo(() => {
-    if (!generatedInput && !idea) return null
-    const style = generatedInput?.style || idea?.style || 'Boho'
-    const type = generatedInput?.pieceType || idea?.type || 'Jewelry'
-    const purpose = generatedInput?.purpose || 'Everyday wear'
-    const difficulty = generatedInput?.difficulty || idea?.difficulty || 'Medium'
-    return `Style: ${style} | Type: ${type} | Purpose: ${purpose} | Difficulty: ${difficulty}`
-  }, [generatedInput, idea])
-
-  function handleStartOver() {
-    router.push('/start')
-  }
-
-  async function handleCopyText(text = summaryText) {
-    if (!text) return
+  async function handleCopyText() {
+    if (!summaryText) return
     try {
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(summaryText)
       setCopyState('copied')
       window.setTimeout(() => setCopyState('idle'), 1200)
     } catch {
@@ -240,40 +96,53 @@ export default function ResultsPage() {
     }
   }
 
-  function handleSaveImage(imageSrc?: string | null, title?: string) {
-    const src = safeImageSrc(imageSrc)
-    if (!src) return
+  function handleSaveImage() {
+    const imageSrc = safeImageSrc(idea?.imageUrl)
+    if (!imageSrc) return
 
     const link = document.createElement('a')
-    link.href = src
-    link.download = `${title || 'charmchemy-result'}.png`
+    link.href = imageSrc
+    link.download = `${idea?.title || 'charmchemy-result'}.png`
     document.body.appendChild(link)
     link.click()
     link.remove()
   }
 
+  function handleRegenerate() {
+    router.push('/start')
+  }
+
+  const heroSummary = useMemo(() => {
+    if (!idea && !generatedInput) return null
+
+    const pieces = [
+      generatedInput?.pieceType || idea?.type || 'Jewelry',
+      ...(generatedInput?.styles || []).slice(0, 2),
+      generatedInput?.purpose || 'Everyday wear',
+      generatedInput?.difficulty || idea?.difficulty || 'Medium',
+    ].filter(Boolean)
+
+    return pieces.join(' · ')
+  }, [generatedInput, idea])
+
   const hasResult = Boolean(idea)
+  const imageSrc = safeImageSrc(idea?.imageUrl)
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand}>
+      <header className={styles.navWrap}>
+        <nav className={styles.nav}>
+          <Link href="/" className={styles.logo}>
             Charm<em>chemy</em>
           </Link>
-
-          <div className={styles.progress} aria-label="Workflow progress">
-            <div className={styles.progressStep}>
-              <span className={styles.progressCircle}>1</span>
-              <span>Materials &amp; style</span>
-            </div>
-            <span className={styles.progressLine} />
-            <div className={`${styles.progressStep} ${styles.progressStepActive}`}>
-              <span className={styles.progressCircle}>2</span>
-              <span>Your designs</span>
-            </div>
+          <div className={styles.navLinks}>
+            <Link href="/">Home</Link>
+            <Link href="/start">Start</Link>
           </div>
-        </div>
+          <button type="button" onClick={handleRegenerate} className={styles.navCta}>
+            Regenerate
+          </button>
+        </nav>
       </header>
 
       <main className={styles.shell}>
@@ -281,105 +150,112 @@ export default function ResultsPage() {
           <>
             <section className={styles.hero}>
               <div className={styles.heroCopy}>
-                <div className={styles.kicker}>Your results</div>
+                <div className={styles.kicker}>
+                  <span />
+                  Your results
+                </div>
                 <h1>Your jewelry ideas are ready.</h1>
-                <p>Here are 3 makeable designs based on your materials.</p>
-                {summaryLine ? <p className={styles.summaryLine}>{summaryLine}</p> : null}
+                <p>Here is 1 makeable design based on your materials.</p>
                 {generatedResult?.source ? (
                   <p className={styles.sourceLine}>
-                    Source: <strong>{generatedResult.source === 'openai' ? 'OpenAI' : 'Fallback'}</strong>
+                    Source: <strong>{generatedResult.source}</strong>
                   </p>
                 ) : null}
+                {heroSummary ? <div className={styles.heroMeta}>{heroSummary}</div> : null}
                 {generatedResult?.warning ? (
                   <p className={styles.warning}>{generatedResult.warning}</p>
                 ) : null}
               </div>
 
-              <div className={styles.heroActions}>
-                <button type="button" onClick={handleStartOver} className={styles.regenerateButton}>
-                  Regenerate
-                </button>
-                <button type="button" onClick={handleStartOver} className={styles.startOverButton}>
-                  Start over
-                </button>
+              <div className={styles.heroCard}>
+                <div className={styles.heroCardEyebrow}>What came back</div>
+                <div className={styles.heroCardTitle}>{idea?.title}</div>
+                <div className={styles.heroCardMeta}>
+                  <span>{idea?.type}</span>
+                  <span>{idea?.style}</span>
+                  <span>{idea?.difficulty}</span>
+                  <span>{idea?.time}</span>
+                </div>
               </div>
             </section>
 
-            <section className={styles.grid}>
-              {cards.map((card, index) => (
-                <article className={styles.card} key={`${card.tag}-${index}`}>
-                  <div className={styles.cardImageWrap}>
-                    <span className={styles.cardTag}>{card.tag}</span>
-                    {card.imageUrl ? (
-                      <img
-                        src={card.imageUrl}
-                        alt={card.title}
-                        className={styles.cardImage}
-                      />
-                    ) : (
-                      <div className={styles.cardFallback}>No generated image yet</div>
-                    )}
-                    <span className={styles.cardCaption}>Design render</span>
+            <section className={styles.resultLayout}>
+              <article className={styles.imagePanel}>
+                <div className={styles.imageFrame}>
+                  {imageSrc ? (
+                    <img src={imageSrc} alt={idea?.title || 'Generated jewelry'} className={styles.resultImage} />
+                  ) : (
+                    <div className={styles.imageFallback}>
+                      No generated image yet
+                    </div>
+                  )}
+                </div>
+                <div className={styles.imageMeta}>
+                  <span>Generated image</span>
+                  <span>{idea?.type}</span>
+                </div>
+              </article>
+
+              <article className={styles.detailPanel}>
+                <div className={styles.detailHead}>
+                  <div className={styles.sectionLabel}>Design 1</div>
+                  <h2>{idea?.title}</h2>
+                </div>
+
+                <div className={styles.detailGrid}>
+                  <div>
+                    <strong>Type</strong>
+                    <span>{idea?.type}</span>
                   </div>
-
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardBadge}>{card.badge}</div>
-                    <h2>{card.title}</h2>
-                    <p>{card.description}</p>
-
-                    <div className={styles.miniLabel}>Made from your stash</div>
-                    <div className={styles.materialRow}>
-                      {card.materials.length > 0 ? (
-                        card.materials.map(material => (
-                          <span className={styles.materialChip} key={`${card.title}-${material}`}>
-                            {material}
-                          </span>
-                        ))
-                      ) : (
-                        <span className={styles.materialChip}>Visible materials from photo</span>
-                      )}
-                    </div>
-
-                    <div className={styles.difficultyRow}>
-                      <span className={styles.miniLabel}>Difficulty</span>
-                      <div className={styles.dots}>
-                        {difficultyDots(card.difficulty).map((filled, dotIndex) => (
-                          <span
-                            key={`${card.title}-dot-${dotIndex}`}
-                            className={`${styles.dot} ${filled ? styles.dotActive : ''}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className={styles.cardActions}>
-                      <button type="button" className={styles.viewButton} onClick={() => setOpenIndex(index)}>
-                        View steps
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.secondaryButton}
-                        onClick={() => handleSaveImage(card.imageUrl, card.title)}
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.secondaryButton}
-                        onClick={() => handleCopyText(summaryText)}
-                      >
-                        {copyState === 'copied' ? 'Copied' : 'Copy text'}
-                      </button>
-                    </div>
+                  <div>
+                    <strong>Style</strong>
+                    <span>{idea?.style}</span>
                   </div>
-                </article>
-              ))}
+                  <div>
+                    <strong>Difficulty</strong>
+                    <span>{idea?.difficulty}</span>
+                  </div>
+                  <div>
+                    <strong>Time</strong>
+                    <span>{idea?.time}</span>
+                  </div>
+                </div>
+
+                <div className={styles.materialBlock}>
+                  <strong>Materials used</strong>
+                  <p>{idea?.materialsUsed}</p>
+                </div>
+
+                <div className={styles.stepsBlock}>
+                  <strong>Steps</strong>
+                  <ol>
+                    {idea?.steps.map((step, index) => (
+                      <li key={`${step}-${index}`}>{step}</li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className={styles.buttonRow}>
+                  <button type="button" onClick={handleSaveImage} className={styles.secondaryButton}>
+                    Save image
+                  </button>
+                  <button type="button" onClick={handleCopyText} className={styles.secondaryButton}>
+                    {copyState === 'copied' ? 'Copied' : 'Copy text'}
+                  </button>
+                  <button type="button" onClick={handleRegenerate} className={styles.primaryButton}>
+                    Regenerate
+                  </button>
+                </div>
+              </article>
             </section>
           </>
         ) : (
           <section className={styles.emptyState}>
             <div className={styles.emptyCard}>
-              <div className={styles.kicker}>No generated result yet</div>
+              <div className={styles.kicker}>
+                <span />
+                No generated result yet
+              </div>
               <h1>Generate a design to see your result here.</h1>
               <p>
                 We can only show the live result after you generate from the start page in this tab.
@@ -388,110 +264,30 @@ export default function ResultsPage() {
                 <Link href="/start" className={styles.primaryButton}>
                   Start Creating
                 </Link>
-                <Link href="/" className={styles.secondaryLink}>
+                <Link href="/" className={styles.secondaryButton}>
                   Back home
                 </Link>
               </div>
             </div>
           </section>
         )}
-
-        {selectedCard ? (
-          <div
-            className={styles.modalOverlay}
-            role="dialog"
-            aria-modal="true"
-            onClick={() => setOpenIndex(null)}
-          >
-            <div className={styles.modalPanel} onClick={e => e.stopPropagation()}>
-              <div className={styles.modalImageWrap}>
-                {selectedCard.imageUrl ? (
-                  <img
-                    src={selectedCard.imageUrl}
-                    alt={selectedCard.title}
-                    className={styles.modalImage}
-                  />
-                ) : (
-                  <div className={styles.modalFallback}>No generated image yet</div>
-                )}
-                <button
-                  type="button"
-                  className={styles.modalClose}
-                  onClick={() => setOpenIndex(null)}
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className={styles.modalBody}>
-                <h3>{selectedCard.title}</h3>
-                <p>{selectedCard.description}</p>
-
-                <div className={styles.modalBlocks}>
-                  <div>
-                    <div className={styles.modalLabel}>Materials used</div>
-                    <div className={styles.modalChipRow}>
-                      {selectedCard.materials.length > 0 ? (
-                        selectedCard.materials.map(material => (
-                          <span className={styles.modalChip} key={`${selectedCard.title}-${material}`}>
-                            {material}
-                          </span>
-                        ))
-                      ) : (
-                        <span className={styles.modalChip}>Visible materials from photo</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className={styles.modalLabel}>You&apos;ll also need</div>
-                    <div className={styles.modalChipRow}>
-                      <span className={styles.modalChip}>Type: {selectedCard.type}</span>
-                      <span className={styles.modalChip}>Style: {selectedCard.style}</span>
-                      <span className={styles.modalChip}>Purpose: {generatedInput?.purpose || 'Everyday wear'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.stepsLabel}>Step-by-step</div>
-                <div className={styles.stepsList}>
-                  {selectedCard.steps.map((step, index) => (
-                    <div className={styles.stepRow} key={`${selectedCard.title}-step-${index}`}>
-                      <span className={styles.stepNumber}>{index + 1}</span>
-                      <div>{step}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.primaryButton}
-                    onClick={() => handleSaveImage(selectedCard.imageUrl, selectedCard.title)}
-                  >
-                    Save this design
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => handleCopyText(summaryText)}
-                  >
-                    {copyState === 'copied' ? 'Copied' : 'Copy text'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => setOpenIndex(null)}
-                  >
-                    Back
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
       </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <div>
+            <Link href="/" className={styles.footerLogo}>
+              Charm<em>chemy</em>
+            </Link>
+            <p>Made from maybe. Designed by AI. Crafted by you.</p>
+          </div>
+          <div className={styles.footerLinks}>
+            <Link href="/">Home</Link>
+            <Link href="/start">Start</Link>
+          </div>
+        </div>
+        <div className={styles.footerBottom}>© 2025 Charmchemy</div>
+      </footer>
     </div>
   )
 }
