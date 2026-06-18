@@ -4,6 +4,13 @@ import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import styles from './page.module.css'
 
+const trustItems = [
+  'AI-generated in seconds',
+  'Free to try - no account',
+  'Your images stay private',
+  '3 makeable designs per session',
+]
+
 const howSteps: Array<{
   num: string
   icon: string
@@ -14,19 +21,19 @@ const howSteps: Array<{
     num: 'I.',
     icon: '📷',
     title: 'Upload your materials',
-    desc: 'Show the materials you already have.',
+    desc: 'Show your beads, charms, chains, findings, or leftover supplies.',
   },
   {
     num: 'II.',
     icon: '✦',
     title: 'Choose your style',
-    desc: 'Pick a vibe, piece type, or let Charmchemy decide.',
+    desc: 'Pick your vibe, type of piece, and occasion - or let Charmchemy surprise you.',
   },
   {
     num: 'III.',
     icon: '💎',
     title: 'Get 3 makeable designs',
-    desc: 'Get clear ideas you can make right away.',
+    desc: 'Receive clear concepts with practical crafting steps you can follow right away.',
   },
 ]
 
@@ -82,9 +89,10 @@ export default function Home() {
               <h1 className={styles.heroTitle}>
                 Turn your <em>craft stash</em> into jewelry magic.
               </h1>
+              <p className={styles.heroTagline}>Made from maybe. Designed by AI. Crafted by you.</p>
               <p className={styles.heroSub}>
-                Upload the beads, charms, and findings you already own. Get jewelry ideas you can
-                actually make.
+                Upload the beads, charms and findings you already own. Get three designs you can
+                actually make - with step-by-step instructions.
               </p>
               <div className={styles.heroActions}>
                 <Link href="/start" className={styles.btnPrimary}>
@@ -93,6 +101,11 @@ export default function Home() {
                 <a href="#gallery" className={styles.btnGhostLink}>
                   View examples
                 </a>
+              </div>
+              <div className={styles.heroTrust}>
+                <span>✦ Free to try</span>
+                <span>✦ No account needed</span>
+                <span>✦ Your images stay private</span>
               </div>
             </div>
 
@@ -112,13 +125,22 @@ export default function Home() {
           </div>
         </section>
 
+        <div className={styles.trustBar} aria-label="Trust signals">
+          <div className={styles.trustTrack} aria-hidden="true">
+            {[...trustItems, ...trustItems].map((item, index) => (
+              <span key={`${item}-${index}`}>{item}</span>
+            ))}
+          </div>
+        </div>
+
         <section className={styles.howSection} id="how-it-works">
           <div className={styles.sectionInner}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionEyebrow}>How it works</div>
               <h2>
-                Three steps to <em>makeable designs</em>.
+                From random materials to <em>makeable designs</em>.
               </h2>
+              <p>Three easy steps - from craft stash to finished concept.</p>
             </div>
 
             <div className={styles.howTimeline} role="list" aria-label="How Charmchemy works">
@@ -149,19 +171,53 @@ export default function Home() {
               <h2>
                 Have beads you bought <em>“just in case”?</em>
               </h2>
-              <p>Turn forgotten materials into one clear jewelry idea.</p>
+              <p>
+                Charmchemy helps you turn forgotten materials into fresh jewelry ideas - no design
+                experience needed, no wasted supplies.
+              </p>
+              <ul className={styles.painList}>
+                <li>
+                  <span>✦</span> Stash collectors with overflowing bead boxes
+                </li>
+                <li>
+                  <span>✦</span> Beginner makers who don&apos;t know where to start
+                </li>
+                <li>
+                  <span>✦</span> Etsy sellers & market creators after fresh designs
+                </li>
+              </ul>
               <Link href="/start" className={styles.btnPrimary}>
                 Start Creating ✦
               </Link>
             </div>
 
             <div className={styles.specimenCard} aria-hidden="true">
+              <div className={styles.specimenGrid}>
+                <div>
+                  <div className={`${styles.specimenSwatch} ${styles.swatchBeads}`} />
+                  <p>&ldquo;Bought these 2 years ago. Still haven&apos;t figured out what to do with them.&rdquo;</p>
+                </div>
+                <div>
+                  <div className={`${styles.specimenSwatch} ${styles.swatchCharms}`} />
+                  <p>&ldquo;Beautiful on their own. No idea how to combine them.&rdquo;</p>
+                </div>
+              </div>
+
+              <div className={styles.dividerRow}>
+                <span />
+                <div>✦</div>
+                <span />
+              </div>
+
               <div className={styles.resultCard}>
                 <div className={styles.resultArt} />
                 <div>
                   <div className={styles.resultEyebrow}>Result ✦</div>
                   <h4>Boho Layered Necklace</h4>
-                  <p>Three strands, graduated lengths, and a simple focal pendant.</p>
+                  <p>
+                    Three strands, graduating lengths, gold leaf focal pendant. Step-by-step guide
+                    included.
+                  </p>
                 </div>
               </div>
             </div>
@@ -173,7 +229,7 @@ export default function Home() {
             <div className={styles.sectionHeader}>
               <div className={styles.sectionEyebrow}>Example results</div>
               <h2>Three AI design directions</h2>
-              <p>Ideas matched to your materials and your style.</p>
+              <p>Every session generates ideas matched to your materials and your style.</p>
             </div>
 
             <div className={styles.galleryGrid}>
@@ -204,10 +260,16 @@ export default function Home() {
             <h2>
               Ready to make something from <em>maybe?</em>
             </h2>
-            <p>Upload your stash and get one clear next idea in seconds.</p>
+            <p>
+              Upload your craft stash and get AI-generated jewelry designs you can actually make -
+              in seconds.
+            </p>
             <Link href="/start" className={styles.finalButton}>
               Start Creating ✦
             </Link>
+            <div className={styles.finalMeta}>
+              Free to try · No account needed · Your images stay private
+            </div>
           </div>
         </section>
       </main>
