@@ -38,27 +38,13 @@ const sparkles = [
   { top:'85%', left:'62%', sd:'0.3s' },
 ]
 
-const trustFeatures = [
-  {
-    title: 'AI in seconds',
-    desc: 'Get ideas fast without waiting around.',
-    icon: '✦',
-  },
-  {
-    title: 'Private by default',
-    desc: 'Your uploaded photos stay private.',
-    icon: '◌',
-  },
-  {
-    title: '3 designs per session',
-    desc: 'Enough variety to find the right idea.',
-    icon: '3',
-  },
-  {
-    title: 'Made for DIY makers',
-    desc: 'Built around your existing stash.',
-    icon: '⟡',
-  },
+const trustItems = [
+  'AI-generated in seconds',
+  'Free to try — no account needed',
+  'Your images stay private',
+  'Works with any craft stash',
+  '3 makeable designs per session',
+  'Built for DIY makers',
 ]
 
 const galleryItems = [
@@ -181,18 +167,10 @@ export default function Home() {
       </section>
 
       {/* ── TRUST BAR ── */}
-      <div className={styles.trustBar} aria-label="Trust signals">
-        <div className={styles.trustGrid}>
-          {trustFeatures.map((item) => (
-            <div key={item.title} className={styles.trustCard}>
-              <div className={styles.trustIcon} aria-hidden="true">
-                {item.icon}
-              </div>
-              <div>
-                <div className={styles.trustTitle}>{item.title}</div>
-                <p className={styles.trustDesc}>{item.desc}</p>
-              </div>
-            </div>
+      <div className={styles.trustBar} aria-label="Social proof">
+        <div className={styles.trustTrack} aria-hidden="true">
+          {[...trustItems, ...trustItems].map((item, i) => (
+            <span key={i}>{item}</span>
           ))}
         </div>
       </div>
