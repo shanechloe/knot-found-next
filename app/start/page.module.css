@@ -106,7 +106,7 @@
   margin: 10px 0 0;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(2.7rem, 4vw, 4.1rem);
+  font-size: clamp(2.45rem, 3.6vw, 3.7rem);
   line-height: 1.02;
   letter-spacing: -0.05em;
 }
@@ -144,7 +144,7 @@
 .card h2 {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
   line-height: 1.02;
   letter-spacing: -0.05em;
   font-weight: 600;
@@ -188,7 +188,7 @@
 .uploadTitle {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: 1.55rem;
   line-height: 1.04;
   font-weight: 600;
 }
@@ -447,7 +447,7 @@
 .loadingCard h2 {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 2.8vw, 2.5rem);
+  font-size: clamp(1.65rem, 2.5vw, 2.2rem);
   line-height: 1.04;
   font-weight: 600;
 }
