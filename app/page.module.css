@@ -8,26 +8,29 @@
   overflow: clip;
 }
 
-.header {
+.navWrap {
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid rgba(36, 63, 55, 0.08);
-  background: rgba(243, 235, 218, 0.94);
-  backdrop-filter: blur(12px);
+  padding: 16px 20px 0;
 }
 
-.headerInner {
+.nav {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 18px 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  padding: 18px 22px;
+  border: 1px solid rgba(36, 63, 56, 0.12);
+  border-radius: 999px;
+  background: rgba(243, 235, 218, 0.82);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 40px rgba(36, 63, 56, 0.08);
 }
 
-.brand,
+.navLogo,
 .footerLogo {
   font-family: var(--font-display);
   font-size: clamp(1.9rem, 1.7vw, 2.4rem);
@@ -37,7 +40,7 @@
   color: #243f38;
 }
 
-.brand em,
+.navLogo em,
 .footerLogo em {
   color: #b07f2c;
   font-style: italic;
@@ -46,9 +49,9 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   color: rgba(36, 63, 56, 0.82);
   font-family: var(--font-ui);
   font-size: 0.78rem;
@@ -208,7 +211,7 @@
 .heroTitle {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(3.6rem, 7vw, 6rem);
+  font-size: clamp(4rem, 8vw, 6.9rem);
   line-height: 0.92;
   letter-spacing: -0.055em;
   font-weight: 500;
@@ -364,7 +367,7 @@
   width: 78px;
   height: 78px;
   transform: translate(-50%, -50%);
-  font-size: 1.8rem;
+  font-size: 2rem;
   color: #b07f2c;
 }
 
@@ -469,7 +472,7 @@
 .finalInner h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.45rem, 4.1vw, 4.4rem);
+  font-size: clamp(2.7rem, 4.6vw, 5.1rem);
   line-height: 0.96;
   letter-spacing: -0.05em;
   font-weight: 500;
@@ -492,83 +495,155 @@
 }
 
 .howSection {
-  padding: 102px 0 96px;
+  padding: 92px 0 86px;
 }
 
-.howTimeline {
-  position: relative;
+.howGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  align-items: start;
+  gap: 18px;
 }
 
-.howTimeline::before {
-  content: '';
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 108px;
-  height: 1px;
-  background: rgba(194, 219, 225, 0.95);
-}
-
-.howStep {
+.howCard {
   position: relative;
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 22px;
-  padding: 0 12px;
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(248, 242, 230, 0.82);
+  border: 1px solid rgba(36, 63, 56, 0.12);
+  box-shadow: 0 16px 34px rgba(36, 63, 56, 0.08);
 }
 
-.howStepTop {
-  display: grid;
-  justify-items: center;
-  gap: 16px;
-  min-height: 138px;
+.howCardDark {
+  color: #f7f0e2;
+  background: linear-gradient(180deg, #355a50 0%, #243f38 100%);
 }
 
-.howStepNumber {
+.howCardDark h3,
+.howCardDark p,
+.howCardDark .howNum,
+.howCardDark .howIcon {
+  color: inherit;
+}
+
+.howCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.howNum {
   font-family: var(--font-display);
-  font-size: 1.32rem;
+  font-size: 1rem;
   font-style: italic;
   color: #b07f2c;
 }
 
-.howStepCircle {
+.howIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 140px;
-  height: 140px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(252, 248, 241, 0.85);
-  border: 1px solid rgba(194, 219, 225, 0.95);
-  box-shadow: 0 8px 16px rgba(36, 63, 56, 0.05);
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(36, 63, 56, 0.08);
+  font-size: 1.05rem;
 }
 
-.howStepIcon {
-  font-size: 2rem;
-  line-height: 1;
-  color: #243f38;
+.howArt {
+  height: 214px;
+  border-radius: 22px;
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(36, 63, 56, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
-.howStep h3 {
+.howArt::before,
+.howArt::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+}
+
+.artUpload {
+  background:
+    radial-gradient(circle at 70% 40%, rgba(176, 127, 44, 0.2), transparent 18%),
+    radial-gradient(circle at 20% 75%, rgba(36, 63, 56, 0.08), transparent 22%),
+    linear-gradient(180deg, #f4ead5 0%, #e5d3ae 100%);
+}
+
+.artUpload::before {
+  inset: 34px 26px auto auto;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: rgba(36, 63, 56, 0.1);
+  box-shadow:
+    18px 18px 0 0 rgba(176, 127, 44, 0.12),
+    -72px 74px 0 -8px rgba(36, 63, 56, 0.08);
+}
+
+.artStyle {
+  background:
+    radial-gradient(circle at 35% 34%, rgba(255, 255, 255, 0.4), transparent 20%),
+    linear-gradient(180deg, #ebddbf 0%, #d5b988 100%);
+}
+
+.artStyle::before {
+  inset: 22px auto auto 18px;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  border: 1px dashed rgba(36, 63, 56, 0.18);
+}
+
+.artStyle::after {
+  inset: auto 18px 20px auto;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), rgba(176, 127, 44, 0.84)),
+    linear-gradient(180deg, #ede2cf, #d4b88f);
+}
+
+.artResult {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.5), transparent 22%),
+    linear-gradient(180deg, #d9c49c 0%, #b88f52 100%);
+}
+
+.artResult::before {
+  inset: 34px 30px auto auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+}
+
+.artResult::after {
+  inset: auto auto 26px 24px;
+  width: calc(100% - 48px);
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(36, 63, 56, 0.13);
+  filter: blur(2px);
+}
+
+.howCard h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.92rem;
-  line-height: 1.08;
+  font-size: 2rem;
+  line-height: 1.04;
   font-weight: 500;
-  color: #243f38;
 }
 
-.howStep p {
-  margin: 0;
-  max-width: 23ch;
-  font-size: 1.05rem;
-  line-height: 1.68;
-  color: rgba(118, 147, 156, 0.96);
+.howCard p {
+  margin: 10px 0 0;
+  font-size: 0.98rem;
 }
 
 .painSection {
@@ -701,7 +776,7 @@
 .resultCard h4 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 2rem;
   line-height: 1.04;
   font-weight: 500;
   color: #243f38;
@@ -796,7 +871,7 @@
 .galleryCopy h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 2rem;
   line-height: 1.02;
   font-weight: 500;
 }
@@ -910,18 +985,10 @@
     min-height: 640px;
   }
 
-  .howTimeline,
+  .howGrid,
   .galleryGrid,
   .specimenGrid {
     grid-template-columns: 1fr;
-  }
-
-  .howTimeline::before {
-    display: none;
-  }
-
-  .howStep {
-    padding: 0;
   }
 
   .painInner {
@@ -930,8 +997,13 @@
 }
 
 @media (max-width: 760px) {
-  .headerInner {
-    padding: 14px 16px;
+  .navWrap {
+    padding: 12px 12px 0;
+  }
+
+  .nav {
+    border-radius: 28px;
+    padding: 16px;
     flex-direction: column;
     align-items: flex-start;
   }
@@ -940,7 +1012,6 @@
     width: 100%;
     justify-content: flex-start;
     gap: 14px;
-    font-size: 0.72rem;
   }
 
   .hero,
@@ -985,6 +1056,7 @@
     bottom: 28px;
   }
 
+  .howCard,
   .galleryCard,
   .specimenCard,
   .finalInner {
@@ -1027,18 +1099,13 @@
     min-height: 430px;
   }
 
-  .howStep {
-    gap: 18px;
+  .howCard {
+    padding: 20px;
   }
 
-  .howStep h3,
+  .howCard h3,
   .galleryCopy h3,
   .resultCard h4 {
     font-size: 1.65rem;
-  }
-
-  .howStepCircle {
-    width: 118px;
-    height: 118px;
   }
 }

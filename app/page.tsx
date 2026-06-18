@@ -16,24 +16,30 @@ const howSteps: Array<{
   icon: string
   title: string
   desc: string
+  artClass: string
+  dark?: boolean
 }> = [
   {
     num: 'I.',
     icon: '📷',
     title: 'Upload your materials',
     desc: 'Show your beads, charms, chains, findings, or leftover supplies.',
+    artClass: styles.artUpload,
   },
   {
     num: 'II.',
     icon: '✦',
     title: 'Choose your style',
     desc: 'Pick your vibe, type of piece, and occasion - or let Charmchemy surprise you.',
+    artClass: styles.artStyle,
   },
   {
     num: 'III.',
     icon: '💎',
     title: 'Get 3 makeable designs',
     desc: 'Receive clear concepts with practical crafting steps you can follow right away.',
+    artClass: styles.artResult,
+    dark: true,
   },
 ]
 
@@ -63,18 +69,18 @@ const beads = [
 export default function Home() {
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <nav className={styles.headerInner}>
-          <Link href="/" className={styles.brand}>
+      <header className={styles.navWrap}>
+        <nav className={styles.nav}>
+          <Link href="/" className={styles.navLogo}>
             Charm<em>chemy</em>
           </Link>
           <div className={styles.navLinks}>
             <a href="#how-it-works">How It Works</a>
             <a href="#gallery">Gallery</a>
-            <Link href="/start" className={styles.navCta}>
-              Start Creating ✦
-            </Link>
           </div>
+          <Link href="/start" className={styles.navCta}>
+            Start Creating ✦
+          </Link>
         </nav>
       </header>
 
@@ -143,19 +149,17 @@ export default function Home() {
               <p>Three easy steps - from craft stash to finished concept.</p>
             </div>
 
-            <div className={styles.howTimeline} role="list" aria-label="How Charmchemy works">
+            <div className={styles.howGrid}>
               {howSteps.map((step) => (
                 <article
                   key={step.title}
-                  className={styles.howStep}
-                  role="listitem"
+                  className={`${styles.howCard} ${step.dark ? styles.howCardDark : ''}`}
                 >
-                  <div className={styles.howStepTop}>
-                    <span className={styles.howStepNumber}>{step.num}</span>
-                    <span className={styles.howStepCircle} aria-hidden="true">
-                      <span className={styles.howStepIcon}>{step.icon}</span>
-                    </span>
+                  <div className={styles.howCardTop}>
+                    <span className={styles.howNum}>{step.num}</span>
+                    <span className={styles.howIcon}>{step.icon}</span>
                   </div>
+                  <div className={`${styles.howArt} ${step.artClass}`} />
                   <h3>{step.title}</h3>
                   <p>{step.desc}</p>
                 </article>

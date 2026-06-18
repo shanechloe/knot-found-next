@@ -137,7 +137,7 @@ a {
 .atelier-hero-copy h1 {
   margin: 0;
   max-width: 14ch;
-  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-size: clamp(2.8rem, 7vw, 5.8rem);
   line-height: 0.95;
   font-family: var(--font-display);
   font-weight: 400;
@@ -226,7 +226,7 @@ a {
 
 .section-title-left {
   margin: 0;
-  font-size: clamp(1.65rem, 3.6vw, 2.45rem);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-family: var(--font-display);
   font-weight: 400;
 }
@@ -248,7 +248,7 @@ a {
 .hero h1 {
   margin: 0;
   max-width: 18ch;
-  font-size: clamp(2.25rem, 6vw, 4.8rem);
+  font-size: clamp(2.5rem, 7vw, 5.4rem);
   line-height: 0.97;
   font-family: var(--font-display);
   font-weight: 400;
@@ -328,7 +328,7 @@ a {
 
 .steps-panel h2 {
   margin-top: 0;
-  font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  font-size: clamp(2rem, 5vw, 3.1rem);
   font-family: var(--font-display);
   font-weight: 400;
 }
@@ -382,7 +382,7 @@ a {
 
 .section-head h2 {
   margin: 0.4rem 0 0;
-  font-size: clamp(1.55rem, 3.6vw, 2.35rem);
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
   font-family: var(--font-display);
   font-weight: 400;
 }
@@ -480,7 +480,7 @@ footer p {
 
 .start-hero h1 {
   margin: 0.5rem 0;
-  font-size: clamp(1.85rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 5vw, 3.3rem);
   font-style: italic;
 }
 
