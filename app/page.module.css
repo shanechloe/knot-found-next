@@ -240,39 +240,65 @@
 
 /* ── TRUST BAR ── */
 .trustBar {
-  background: var(--dark);
-  padding: 14px 0;
-  overflow: hidden;
   position: relative;
   z-index: 1;
+  margin-top: -28px;
+  padding: 0 24px;
 }
-.trustTrack {
+
+.trustGrid {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(168,200,206,.26);
+  border-radius: 28px;
+  background: rgba(253,250,245,.76);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+
+.trustCard {
   display: flex;
-  gap: 48px;
-  animation: marquee 24s linear infinite;
-  white-space: nowrap;
-  flex-shrink: 0;
-  width: max-content;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(249,245,235,.9));
+  border: 1px solid rgba(168,200,206,.18);
 }
-.trustTrack span {
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(253,250,245,.55);
-  letter-spacing: 0.06em;
+
+.trustIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.trustTrack span::before {
-  content: '✦';
+  justify-content: center;
+  flex: 0 0 auto;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 16px;
   color: var(--gold);
-  opacity: 0.7;
-  font-size: 10px;
+  background: rgba(218,211,198,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
 }
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+
+.trustTitle {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--deep);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.trustDesc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(44,74,82,.72);
 }
 
 /* ── SECTION BASE ── */
@@ -733,7 +759,7 @@
 @media (prefers-reduced-motion: reduce) {
   .bead,
   .sparkle,
-  .trustTrack,
+  .trustGrid,
   .reveal,
   .heroEyebrow,
   .heroHeadline,
@@ -752,6 +778,7 @@
 @media (max-width: 900px) {
   .nav { padding: 0 24px; }
   .navLinks { display: none; }
+  .trustGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero { min-height: 100svh; }
   .heroCenter { padding: 0 24px; }
   .heroHeadline { font-size: clamp(38px, 10vw, 58px); }
@@ -768,4 +795,22 @@
   .footer { flex-direction: column; gap: 24px; text-align: center; padding: 32px 24px; }
   .footerLinks { justify-content: center; }
   .footerRight { text-align: center; }
+}
+
+@media (max-width: 640px) {
+  .trustBar {
+    margin-top: -18px;
+    padding: 0 16px;
+  }
+
+  .trustGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .trustCard {
+    padding: 12px;
+  }
 }
