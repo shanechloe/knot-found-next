@@ -235,7 +235,7 @@ export default function StartPage() {
             <section className={styles.card}>
               <div className={styles.cardHead}>
                 <div>
-                  <div className={styles.sectionKicker}>Upload your materials</div>
+                  <div className={styles.sectionKicker}>Primary section</div>
                   <h2>Upload your materials</h2>
                 </div>
               </div>
@@ -313,7 +313,7 @@ export default function StartPage() {
             <section className={styles.card}>
               <div className={styles.cardHead}>
                 <div>
-                  <div className={styles.sectionKicker}>Describe More Details</div>
+                  <div className={styles.sectionKicker}>Optional details</div>
                   <h2>
                     Describe more details <span className={styles.optional}>Optional</span>
                   </h2>
@@ -334,10 +334,10 @@ export default function StartPage() {
 
           <div className={styles.rightColumn}>
             <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Jewelry Type</div>
+              <div className={styles.sectionKicker}>Jewelry type</div>
               <h2>What would you like to make?</h2>
               <p className={styles.helperText}>Not sure? Choose Surprise Me and let Charmchemy decide.</p>
-              <div className={styles.chipGrid}>
+              <div className={`${styles.chipGrid} ${styles.chipGridDense}`}>
                 {PIECE_TYPES.map(type => {
                   const isActive = surprise ? type === 'Surprise Me' : pieceType === type
                   return (
@@ -362,7 +362,7 @@ export default function StartPage() {
             </section>
 
             <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Style</div>
+              <div className={styles.sectionKicker}>Choose vibe</div>
               <h2>Choose a vibe</h2>
               <div className={styles.chipGrid}>
                 {STYLES.map(item => (
@@ -379,9 +379,9 @@ export default function StartPage() {
             </section>
 
             <section className={styles.card}>
-              <div className={styles.sectionKicker}>Choose Purpose</div>
+              <div className={styles.sectionKicker}>Occasion</div>
               <h2>What is it for?</h2>
-              <div className={styles.chipGrid}>
+              <div className={`${styles.chipGrid} ${styles.chipGridDense}`}>
                 {PURPOSES.map(item => (
                   <button
                     key={item}

@@ -164,15 +164,16 @@ function buildCards(idea: GeneratedIdea, input: StoredInput | null) {
   return [
     {
       tag: 'Design 1',
-      badge: 'Best match',
+      badge: 'Primary result',
       title: idea.title,
-      description: 'A balanced interpretation that keeps the visible materials front and center.',
+      description: 'The strongest match for your uploaded materials and requested style.',
+      featured: true,
       accent: 'light',
       ...cardBase,
     },
     {
       tag: 'Design 2',
-      badge: 'Wearable edit',
+      badge: 'Variation',
       title: titleFromParts(idea.type, idea.style, 'Study'),
       description: 'A slightly fuller layout that keeps the same inventory but shifts the rhythm.',
       accent: 'dark',
@@ -180,7 +181,7 @@ function buildCards(idea: GeneratedIdea, input: StoredInput | null) {
     },
     {
       tag: 'Design 3',
-      badge: 'Quick make',
+      badge: 'Variation',
       title: titleFromParts(idea.type, idea.style, 'Remix'),
       description: 'A simplified finish with the same materials arranged into a quicker build.',
       accent: 'neutral',
@@ -299,7 +300,7 @@ export default function ResultsPage() {
                 <button type="button" onClick={handleStartOver} className={styles.regenerateButton}>
                   Regenerate
                 </button>
-                <button type="button" onClick={handleStartOver} className={styles.startOverButton}>
+                <button type="button" onClick={handleStartOver} className={styles.secondaryLink}>
                   Start over
                 </button>
               </div>
@@ -307,7 +308,10 @@ export default function ResultsPage() {
 
             <section className={styles.grid}>
               {cards.map((card, index) => (
-                <article className={styles.card} key={`${card.tag}-${index}`}>
+                <article
+                  className={`${styles.card} ${index === 0 ? styles.cardFeatured : styles.cardVariant}`}
+                  key={`${card.tag}-${index}`}
+                >
                   <div className={styles.cardImageWrap}>
                     <span className={styles.cardTag}>{card.tag}</span>
                     {card.imageUrl ? (
@@ -368,7 +372,7 @@ export default function ResultsPage() {
                         className={styles.secondaryButton}
                         onClick={() => handleCopyText(summaryText)}
                       >
-                        {copyState === 'copied' ? 'Copied' : 'Copy text'}
+                        {copyState === 'copied' && index === 0 ? 'Copied' : 'Copy text'}
                       </button>
                     </div>
                   </div>

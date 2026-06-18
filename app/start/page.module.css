@@ -121,15 +121,15 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 1.12fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.98fr);
+  gap: 28px;
   align-items: start;
 }
 
 .leftColumn,
 .rightColumn {
   display: grid;
-  gap: 22px;
+  gap: 16px;
 }
 
 .card {
@@ -137,14 +137,14 @@
   border: 1px solid rgba(36, 63, 55, 0.1);
   background: rgba(251, 247, 238, 0.86);
   box-shadow: 0 14px 30px rgba(36, 63, 55, 0.08);
-  padding: 24px;
+  padding: 20px;
 }
 
 .cardHead h2,
 .card h2 {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1.65rem, 2.6vw, 2.25rem);
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
   line-height: 1.02;
   letter-spacing: -0.05em;
   font-weight: 600;
@@ -153,12 +153,12 @@
 .helperText {
   margin: 10px 0 0;
   color: #6b7d74;
-  line-height: 1.7;
-  font-size: 0.96rem;
+  line-height: 1.65;
+  font-size: 0.92rem;
 }
 
 .uploadArea {
-  margin-top: 18px;
+  margin-top: 14px;
   border-radius: 26px;
   border: 1.5px dashed rgba(36, 63, 55, 0.2);
   background:
@@ -188,7 +188,7 @@
 .uploadTitle {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.7rem;
   line-height: 1.04;
   font-weight: 600;
 }
@@ -197,7 +197,7 @@
   margin: 10px auto 0;
   max-width: 36ch;
   color: rgba(36, 63, 55, 0.7);
-  line-height: 1.7;
+  line-height: 1.65;
 }
 
 .uploadButton {
@@ -266,7 +266,7 @@
 
 .textarea {
   width: 100%;
-  min-height: 142px;
+  min-height: 124px;
   margin-top: 18px;
   border-radius: 20px;
   border: 1.5px solid rgba(36, 63, 55, 0.14);
@@ -296,10 +296,15 @@
   margin-top: 16px;
 }
 
+.chipGridDense {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .chip {
   border: 1px solid rgba(36, 63, 55, 0.14);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   background: rgba(255, 252, 246, 0.88);
   color: rgba(36, 63, 55, 0.78);
   cursor: pointer;
@@ -308,7 +313,7 @@
     border-color 180ms ease,
     background-color 180ms ease,
     color 180ms ease;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-family: var(--font-ui);
 }
 
@@ -326,9 +331,9 @@
 .segmented {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 16px;
-  padding: 6px;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 5px;
   border-radius: 18px;
   background: rgba(36, 63, 55, 0.06);
 }
@@ -336,7 +341,7 @@
 .segment {
   border: none;
   border-radius: 14px;
-  padding: 12px 10px;
+  padding: 10px 10px;
   background: transparent;
   color: rgba(36, 63, 55, 0.7);
   font-family: var(--font-ui);
@@ -388,9 +393,9 @@
 }
 
 .generateMeta {
-  margin-top: 14px;
+  margin-top: 12px;
   color: rgba(36, 63, 55, 0.66);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 .clearButton {
@@ -442,7 +447,7 @@
 .loadingCard h2 {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 3vw, 2.9rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.5rem);
   line-height: 1.04;
   font-weight: 600;
 }
@@ -450,8 +455,8 @@
 .loadingCard p {
   margin: 0;
   color: #6b7d74;
-  line-height: 1.7;
-  font-size: 0.98rem;
+  line-height: 1.65;
+  font-size: 0.94rem;
 }
 
 @keyframes spin {
@@ -499,6 +504,10 @@
   }
 
   .segmented {
+    grid-template-columns: 1fr;
+  }
+
+  .chipGridDense {
     grid-template-columns: 1fr;
   }
 

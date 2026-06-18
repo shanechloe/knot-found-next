@@ -8,9 +8,7 @@ const trustItems = [
   'AI-generated in seconds',
   'Free to try - no account',
   'Your images stay private',
-  'Works with any craft stash',
   '3 makeable designs per session',
-  'Built for DIY makers',
 ]
 
 const howSteps: Array<{
@@ -59,13 +57,6 @@ const galleryItems = [
     desc: 'Boho stack-friendly bracelet made from mixed beads and jump rings. Zero waste, all style.',
     artClass: styles.galleryArt2,
     badgeClass: styles.badgeStudio,
-  },
-  {
-    badge: '💫 Zero waste',
-    title: 'Charm Cascade Earrings',
-    desc: 'Uses leftover findings to create an asymmetric but balanced pair. Nothing goes to waste.',
-    artClass: styles.galleryArt3,
-    badgeClass: styles.badgeZero,
   },
 ] as const
 
