@@ -200,42 +200,16 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
 .card {
-  grid-column: span 4;
   border-radius: 18px;
   overflow: hidden;
   background: #fbf7ee;
   border: 1px solid rgba(36, 63, 55, 0.1);
   box-shadow: 0 14px 30px rgba(36, 63, 55, 0.08);
-}
-
-.cardFeatured {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-  min-height: 420px;
-}
-
-.cardFeatured .cardImageWrap {
-  min-height: 420px;
-}
-
-.cardFeatured .cardBody {
-  display: grid;
-  align-content: center;
-  padding: 28px 28px 30px;
-}
-
-.cardFeatured .cardBody h2 {
-  font-size: clamp(2rem, 2.8vw, 2.7rem);
-}
-
-.cardVariant {
-  grid-column: span 6;
 }
 
 .cardImageWrap {
@@ -426,12 +400,6 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  min-height: 48px;
-  padding: 12px 18px;
-  color: #243f38;
-  background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .modalOverlay {
@@ -550,20 +518,6 @@
     grid-template-columns: 1fr;
   }
 
-  .card,
-  .cardFeatured,
-  .cardVariant {
-    grid-column: auto;
-  }
-
-  .cardFeatured {
-    grid-template-columns: 1fr;
-  }
-
-  .cardFeatured .cardImageWrap {
-    min-height: 330px;
-  }
-
   .hero {
     flex-direction: column;
     align-items: flex-start;
@@ -587,10 +541,6 @@
 
   .cardActions {
     grid-template-columns: 1fr;
-  }
-
-  .secondaryLink {
-    justify-content: center;
   }
 
   .modalBody {

@@ -35,7 +35,7 @@
   font-family: var(--font-display);
   font-size: clamp(1.9rem, 1.7vw, 2.4rem);
   font-weight: 500;
-  font-style: normal;
+  font-style: italic;
   letter-spacing: -0.03em;
   color: #243f38;
 }
@@ -230,11 +230,11 @@
 .heroTagline {
   margin: 24px 0 0;
   max-width: 24ch;
-  font-family: var(--font-ui);
-  font-size: clamp(0.95rem, 1.25vw, 1.08rem);
-  line-height: 1.7;
-  color: rgba(36, 63, 56, 0.74);
-  letter-spacing: 0.02em;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.5rem, 2.5vw, 2.15rem);
+  line-height: 1.08;
+  color: #243f38;
 }
 
 .heroSub {
@@ -792,7 +792,7 @@
 
 .galleryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
