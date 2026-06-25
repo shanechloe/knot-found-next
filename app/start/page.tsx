@@ -394,22 +394,26 @@ export default function StartPage() {
 
       {/* FOOTER */}
       <footer style={{
-        background: 'var(--dark)', padding: '24px 36px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'var(--dark)', padding: '24px 24px',
         borderTop: '1px solid rgba(168,200,206,.08)',
       }}>
-        <div>
-          <Link href="/" style={{
-            fontFamily: 'var(--font-display), Georgia, serif',
-            fontSize: '17px', fontWeight: 300, color: 'rgba(253,250,245,.45)', textDecoration: 'none',
-          }}>
-            Charm<em style={{ fontStyle: 'italic', color: 'rgba(201,150,58,.55)' }}>chemy</em>
-          </Link>
-          <p style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)', marginTop: '2px' }}>
-            Made from maybe. Designed by AI. Crafted by you.
-          </p>
+        <div style={{
+          maxWidth: '600px', width: 'min(100%, 600px)', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px',
+        }}>
+          <div>
+            <Link href="/" style={{
+              fontFamily: 'var(--font-display), Georgia, serif',
+              fontSize: '17px', fontWeight: 300, color: 'rgba(253,250,245,.45)', textDecoration: 'none',
+            }}>
+              Charm<em style={{ fontStyle: 'italic', color: 'rgba(201,150,58,.55)' }}>chemy</em>
+            </Link>
+            <p style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)', marginTop: '2px' }}>
+              Made from maybe. Designed by AI. Crafted by you.
+            </p>
+          </div>
+          <span style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)' }}>© 2025 Charmchemy</span>
         </div>
-        <span style={{ fontSize: '11px', color: 'rgba(253,250,245,.18)' }}>© 2025 Charmchemy</span>
       </footer>
     </>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { CSSProperties } from 'react'
@@ -80,7 +80,127 @@ const badgeMap = {
   badgeZero:   styles.badgeZero,
 }
 
+type HeroCard = {
+  id: string
+  title: string
+  afterSrc: string
+  afterAlt: string
+  beforeLabel: string
+  beforeCopy: string
+  materials: Array<{ name: string; color: string }>
+  rotate: number
+  dx: number
+  dy: number
+}
+
+const heroCards: HeroCard[] = [
+  {
+    id: 'necklace',
+    title: 'After: Layered Necklace',
+    afterSrc: '/examples/design-2.jpg',
+    afterAlt: 'Finished beaded necklace design',
+    beforeLabel: 'Before: loose stash',
+    beforeCopy: 'Mixed seed beads, offcut chain, one focal charm, and a few leftover findings.',
+    materials: [
+      { name: 'seed beads', color: '#A8C8CE' },
+      { name: 'chain offcut', color: '#C9963A' },
+      { name: 'focal charm', color: '#3D6B76' },
+    ],
+    rotate: -8,
+    dx: 16,
+    dy: 12,
+  },
+  {
+    id: 'bracelet',
+    title: 'After: Charm Bracelet',
+    afterSrc: '/examples/design-1.jpg',
+    afterAlt: 'Finished bracelet design',
+    beforeLabel: 'Before: table spread',
+    beforeCopy: 'Pearls, pale green beads, and a single gold finding waiting to become a refined piece.',
+    materials: [
+      { name: 'pearls', color: '#EEE3D2' },
+      { name: 'green beads', color: '#B6D8B5' },
+      { name: 'gold finding', color: '#C9963A' },
+    ],
+    rotate: 10,
+    dx: 14,
+    dy: 10,
+  },
+  {
+    id: 'earrings',
+    title: 'After: Drop Earrings',
+    afterSrc: '/examples/design-3.jpg',
+    afterAlt: 'Finished earrings design',
+    beforeLabel: 'Before: tiny parts',
+    beforeCopy: 'Small beads, hooks, and a few metallic accents rearranged into a delicate pair.',
+    materials: [
+      { name: 'ear hooks', color: '#C9963A' },
+      { name: 'glass beads', color: '#A8C8CE' },
+      { name: 'tiny accents', color: '#C47B7B' },
+    ],
+    rotate: -4,
+    dx: 12,
+    dy: 8,
+  },
+]
+
+function BeforeAfterFloatingCard({ card }: { card: HeroCard }) {
+  const [flipped, setFlipped] = useState(false)
+
+  return (
+    <button
+    type="button"
+    className={styles.beforeAfterCard}
+    style={{
+      ['--card-rotate' as any]: `${card.rotate}deg`,
+      ['--card-dx' as any]: `${card.dx}px`,
+      ['--card-dy' as any]: `${card.dy}px`,
+    } as CSSProperties}
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
+      onFocus={() => setFlipped(true)}
+      onBlur={() => setFlipped(false)}
+      onClick={() => setFlipped(prev => !prev)}
+      aria-label={`${card.title}. Hover to reveal the before materials.`}
+      aria-pressed={flipped}
+    >
+      <span className={styles.beforeAfterLabel}>{flipped ? card.beforeLabel : 'After: finished piece'}</span>
+      <span className={styles.beforeAfterHint}>{flipped ? 'tap again to flip back' : 'hover to reveal before'}</span>
+
+      <div className={`${styles.beforeAfterStage} ${flipped ? styles.flipped : ''}`}>
+        <div className={styles.beforeAfterFace}>
+          <Image
+            src={card.afterSrc}
+            alt={card.afterAlt}
+            fill
+            sizes="(max-width: 768px) 180px, 220px"
+            className={styles.beforeAfterImage}
+            priority={card.id === 'bracelet'}
+          />
+          <div className={styles.afterGlow} aria-hidden="true" />
+        </div>
+
+        <div className={`${styles.beforeAfterFace} ${styles.beforeFace}`}>
+          <div className={styles.beforeTitle}>{card.beforeLabel}</div>
+          <div className={styles.beforeSwatches} aria-hidden="true">
+            {card.materials.map(material => (
+              <span key={material.name} className={styles.beforeSwatchWrap}>
+                <span className={styles.beforeSwatch} style={{ background: material.color }} />
+                <span>{material.name}</span>
+              </span>
+            ))}
+          </div>
+          <p className={styles.beforeCopy}>{card.beforeCopy}</p>
+          <div className={styles.beforeNote}>Hover cards reveal the raw stash behind each idea.</div>
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export default function Home() {
+  const heroRef = useRef<HTMLElement | null>(null)
+
   // scroll reveal
   useEffect(() => {
     const els = document.querySelectorAll(`.${styles.reveal}`)
@@ -105,6 +225,17 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
+  function updateHeroPointer(clientX: number, clientY: number) {
+    const hero = heroRef.current
+    if (!hero) return
+    const rect = hero.getBoundingClientRect()
+    if (!rect.width || !rect.height) return
+    const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height))
+    hero.style.setProperty('--hero-mx', `${x}`)
+    hero.style.setProperty('--hero-my', `${y}`)
+  }
+
   return (
     <>
       {/* ── NAV ── */}
@@ -120,7 +251,21 @@ export default function Home() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className={styles.hero}>
+      <section
+        className={styles.hero}
+        ref={heroRef}
+        onMouseMove={e => updateHeroPointer(e.clientX, e.clientY)}
+        onMouseLeave={() => {
+          const hero = heroRef.current
+          if (!hero) return
+          hero.style.setProperty('--hero-mx', '0.5')
+          hero.style.setProperty('--hero-my', '0.5')
+        }}
+        style={{
+          ['--hero-mx' as any]: '0.5',
+          ['--hero-my' as any]: '0.5',
+        } as CSSProperties}
+      >
         <div className={styles.beadField} aria-hidden="true">
           {beads.map((b, i) => (
             <div
@@ -163,6 +308,12 @@ export default function Home() {
             <Link href="/start" className={styles.btnHero}>Start Creating ✦</Link>
             <a href="#gallery" className={styles.btnGhostLink}>View examples</a>
           </div>
+        </div>
+
+        <div className={styles.beforeAfterField}>
+          {heroCards.map(card => (
+            <BeforeAfterFloatingCard key={card.id} card={card} />
+          ))}
         </div>
       </section>
 
@@ -295,17 +446,19 @@ export default function Home() {
 
       {/* ── FOOTER ── */}
       <footer className={styles.footer}>
-        <div>
-          <Link href="/" className={styles.footerLogo}>Charm<em>chemy</em></Link>
-          <p className={styles.footerTagline}>Made from maybe. Designed by AI. Crafted by you.</p>
-        </div>
-        <div className={styles.footerRight}>
-          <ul className={styles.footerLinks}>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#gallery">Gallery</a></li>
-            <li><Link href="/start">Start Creating</Link></li>
-          </ul>
-          <p className={styles.footerCopy}>© 2025 Charmchemy · All rights reserved</p>
+        <div className={styles.footerInner}>
+          <div>
+            <Link href="/" className={styles.footerLogo}>Charm<em>chemy</em></Link>
+            <p className={styles.footerTagline}>Made from maybe. Designed by AI. Crafted by you.</p>
+          </div>
+          <div className={styles.footerRight}>
+            <ul className={styles.footerLinks}>
+              <li><a href="#how-it-works">How It Works</a></li>
+              <li><a href="#gallery">Gallery</a></li>
+              <li><Link href="/start">Start Creating</Link></li>
+            </ul>
+            <p className={styles.footerCopy}>© 2025 Charmchemy · All rights reserved</p>
+          </div>
         </div>
       </footer>
     </>
